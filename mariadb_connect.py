@@ -1,8 +1,8 @@
 import sys
-
 import mariadb
 import yaml
 from yaml import SafeLoader
+
 
 with open('config.yml', 'r') as f:
     config = yaml.load(f, Loader=SafeLoader)
@@ -21,12 +21,12 @@ try:
         host=hostname,
         port=int(port),
         database=db_name
-
     )
     # Get Cursor
     cur = conn.cursor()
-    print(cur.execute("SELECT * FROM patient_base"))
-    # TODO(LD) It seems like it keep returning "None" as result, pls fix this
+    cur.execute("SELECT name FROM patient_base")
+    for (name) in cur:
+        print(name)
 
 except mariadb.Error as e:
     print(f"Error connecting to MariaDB Platform: {e}")
