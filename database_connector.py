@@ -54,3 +54,23 @@ def update_patient_line_id(patient_id, line_id):
         connection.commit()
     except database.errors as e:
         print("Error retrieving entry from database: {}".format(e))
+
+
+def is_line_registered(line_id):
+    try:
+        statement = "SELECT is_registered FROM line_registry WHERE line_id = '{}'".format(line_id)
+        cursor.execute(statement)
+        for result in cursor:
+            is_registered = result
+        return list(is_registered)[0]
+    except database.errors as e:
+        print("Error retrieving entry from database: {}".format(e))
+
+
+def update_line_registry(line_id, is_registered):
+    try:
+        statement = "INSERT INTO line_registry(line_id, is_registered) VALUE ('{}', {})".format(line_id, is_registered)
+        cursor.execute(statement)
+        connection.commit()
+    except database.errors as e:
+        print("Error retrieving entry from database: {}".format(e))
