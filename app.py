@@ -5,13 +5,16 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models import TextSendMessage, MessageEvent, TextMessage
 from yaml.loader import SafeLoader
 
-app = Flask(__name__)
+import database_connector
 
 with open('config.yml', 'r') as f:
     config = yaml.load(f, Loader=SafeLoader)
 
 line_bot_api = LineBotApi(config['Line']['channel_access_token'])
 handler = WebhookHandler(config['Line']['channel_secret'])
+
+database = database_connector
+app = Flask(__name__)
 
 
 @app.route("/callback", methods=['POST'])

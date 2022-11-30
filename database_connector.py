@@ -7,7 +7,6 @@ with open('config.yml', 'r') as f:
 
 hostname = config['Database']['hostname']
 db_name = config['Database']['db_name']
-port = config['Database']['port']
 username = config['Database']['username']
 password = config['Database']['password']
 
@@ -31,7 +30,3 @@ def get_patient_info(patient_id, patient_data_type):
     except database.errors as e:
         print("Error retrieving entry from database: {}".format(e))
 
-
-print(get_patient_info("B123456789", "name"))
-
-connection.close()
