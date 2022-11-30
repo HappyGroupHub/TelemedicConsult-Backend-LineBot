@@ -45,3 +45,12 @@ def get_patient_info(patient_id):
         return patient_info
     except database.errors as e:
         print("Error retrieving entry from database: {}".format(e))
+
+
+def update_patient_line_id(patient_id, line_id):
+    try:
+        statement = "UPDATE patient_base SET line_id = '{}' WHERE id = '{}'".format(line_id, patient_id)
+        cursor.execute(statement)
+        connection.commit()
+    except database.errors as e:
+        print("Error retrieving entry from database: {}".format(e))
