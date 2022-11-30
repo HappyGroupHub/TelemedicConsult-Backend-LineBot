@@ -20,13 +20,28 @@ connection = database.connect(
 cursor = connection.cursor()
 
 
-def get_patient_info(patient_id, patient_data_type):
+def get_patient_info(patient_id):
     try:
-        statement = "SELECT {} FROM patient_base WHERE id = '{}'".format(patient_data_type, patient_id)
+        statement = "SELECT * FROM patient_base WHERE id = '{}'".format(patient_id)
         cursor.execute(statement)
         for result in cursor:
-            patient_info = result
-        return list(patient_info)[0]
+            results = result
+        patient_info = {
+            'name': list(results)[0],
+            'id': list(results)[1],
+            'sex': list(results)[2],
+            'birthday': list(results)[3],
+            'blood_type': list(results)[4],
+            'ic_card_number': list(results)[5],
+            'phone_number': list(results)[6],
+            'address': list(results)[7],
+            'height': list(results)[8],
+            'weight': list(results)[9],
+            'ice_contact': list(results)[10],
+            'ice_relation': list(results)[11],
+            'ice_phone': list(results)[12],
+            'line_id': list(results)[13]
+        }
+        return patient_info
     except database.errors as e:
         print("Error retrieving entry from database: {}".format(e))
-
