@@ -49,7 +49,7 @@ def callback():
 @handler.add(FollowEvent)
 def handle_join(event):
     if event.type == "follow":
-        database.create_line_registry(event.source.user_id, False)
+        print("Someone just added you as friend")
 
 
 @handler.add(MessageEvent, message=TextMessage)
@@ -60,7 +60,6 @@ def handle_message(event):
 
     # TODO(LD) Use try statement to avoid no matching id database error
     # TODO(LD) Create an if statement for user to leave binding process
-    # TODO(LD) (?) Check if user have data in line_registry table someway
     # TODO(LD) Improve reply messages
     if want_register.get(line_id):
         if line_id not in temp_register_id:  # 如果沒有輸入過身分證字號
@@ -96,6 +95,10 @@ def handle_message(event):
                 line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
     if received_message == "綁定Line帳號":
+        try:
+            database.is_line_registered(line_id)  # 確認病人在line_registry資料表中有資料
+        except TypeError:  # 若沒有則新增
+            database.create_line_registry(event.source.user_id, False)
         if not database.is_line_registered(line_id):
             want_register[line_id] = True
             reply_message = "請輸入您的身分證字號"
