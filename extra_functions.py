@@ -1,5 +1,4 @@
 import datetime
-from typing import Union
 
 
 def is_id_legal(id_number):
@@ -16,7 +15,7 @@ def is_id_legal(id_number):
             return True
         else:
             return False
-    except (KeyError, ValueError):
+    except (KeyError, ValueError, IndexError):
         return False
 
 
