@@ -48,57 +48,51 @@ def handle_join(event):
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    line_registry_ready = {}
-    line_registry_id = {}
-    line_registry_birthday = {}
-    if line_registry_ready.get(event.source.user_id):
-        if extras.is_id_legal(event.message.text):
-            line_registry_id.pop(event.source.user_id, event.message.text)
-            reply_message = "請依照範例輸入您的出生年月日 ex:1999/9/9"
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_message))
-        elif not extras.is_id_legal(event.message.text):
-            reply_message = "您輸入的格式不符, 請再輸入一次!"
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_message))
-        elif event.source.user_id in line_registry_id:
-            if extras.is_date(event.message.text):
-                line_registry_birthday.pop(event.source.user_id, event.message.text)
-                if line_registry_id.get(event.source.user_id) == database.get_patient_info(
-                        line_registry_id.get(event.source.user_id).get('id')) & line_registry_birthday.get(
-                    event.source.user_id) == database.get_patient_info(
-                    line_registry_birthday.get(event.source.user_id).get('birthday')):
-                    line_registry_ready.update(event.source.user_id, False)
-                    database.update_patient_line_id(line_registry_id.get(event.source.user_id), event.source.user_id)
-                    database.update_line_registry(event.source.user_id, True)
-                    reply_message = "成功綁定"
-                    line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_message))
-                else:
-                    line_registry_ready.update(event.source.user_id, False)
-                    reply_message = "查無此人"
-                    line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_message))
-            elif not extras.is_date(event.message.text):
-                reply_message = "您輸入的格式不符, 請再輸入一次!"
-                line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_message))
+    line_id = event.source.user_id
+    received_message = event.message.text
+    reply_token = event.reply_token
 
-    if event.message.text == "綁定Line帳號":
-        if not database.is_line_registered(event.source.user_id):
-            line_registry_ready.pop(event.source.user_id, True)
+    want_register = {}
+    temp_register_id = {}
+    temp_register_birthday = {}
+    if want_register.get(line_id):
+        if extras.is_id_legal(received_message):
+            temp_register_id.pop(line_id, received_message)
+            reply_message = "請依照範例輸入您的出生年月日 ex:1999/9/9"
+            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+        elif not extras.is_id_legal(received_message):
+            reply_message = "您輸入的格式不符, 請再輸入一次!"
+            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+        elif line_id in temp_register_id:
+            if extras.is_date(received_message):
+                temp_register_birthday.pop(line_id, received_message)
+                if temp_register_id.get(line_id) == database.get_patient_info(
+                        temp_register_id.get(line_id).get('id')) & temp_register_birthday.get(
+                    line_id) == database.get_patient_info(
+                    temp_register_birthday.get(line_id).get('birthday')):
+                    want_register.update(line_id, False)
+                    database.update_patient_line_id(temp_register_id.get(line_id), line_id)
+                    database.update_line_registry(line_id, True)
+                    reply_message = "成功綁定"
+                    line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+                else:
+                    want_register.update(line_id, False)
+                    reply_message = "查無此人"
+                    line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+            elif not extras.is_date(received_message):
+                reply_message = "您輸入的格式不符, 請再輸入一次!"
+                line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+
+    if received_message == "綁定Line帳號":
+        if not database.is_line_registered(line_id):
+            want_register.pop(line_id, True)
             reply_message = "請輸入您的身分證字號"
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_message))
+            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
         else:
             reply_message = "您已經綁定Line帳號囉！ 若要重新綁定請點選會員服務"
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_message))
+            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
-    if line_registry_ready.get(event.source.user_id):
-        if extras.is_id_legal(event.message.text):
-            line_registry_id.pop(event.source.user_id, event.message.text)
-            reply_message = "請依照範例輸入您的出生年月日 ex:1999/9/9"
-            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_message))
-        elif extras.is_date(event.message.text):
-            line_registry_birthday.pop(event.source.user_id, event.message.text)
-
-            reply_message = "成功綁定"
-
-    if event.message.text == "會員服務":
+    if received_message == "會員服務":
         carousel_template_message = TemplateSendMessage(
             alt_text="目錄 template",
             template=CarouselTemplate(
@@ -129,9 +123,9 @@ def handle_message(event):
                 ]
             )
         )
-        line_bot_api.reply_message(event.reply_token, carousel_template_message)
+        line_bot_api.reply_message(reply_token, carousel_template_message)
 
-    if event.message.text == "掛號":
+    if received_message == "掛號":
         carousel_template_message = TemplateSendMessage(
             alt_text="目錄 template",
             template=CarouselTemplate(
@@ -162,8 +156,8 @@ def handle_message(event):
                 ]
             )
         )
-        line_bot_api.reply_message(event.reply_token, carousel_template_message)
-    if event.message.text == "看診進度":
+        line_bot_api.reply_message(reply_token, carousel_template_message)
+    if received_message == "看診進度":
         carousel_template_message = TemplateSendMessage(
             alt_text="目錄 template",
             template=CarouselTemplate(
@@ -194,7 +188,7 @@ def handle_message(event):
                 ]
             )
         )
-        line_bot_api.reply_message(event.reply_token, carousel_template_message)
+        line_bot_api.reply_message(reply_token, carousel_template_message)
 
 
 if __name__ == "__main__":
