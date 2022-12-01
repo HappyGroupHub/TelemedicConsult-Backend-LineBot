@@ -67,9 +67,18 @@ def is_line_registered(line_id):
         print("Error retrieving entry from database: {}".format(e))
 
 
-def update_line_registry(line_id, is_registered):
+def create_line_registry(line_id, is_registered):
     try:
         statement = "INSERT INTO line_registry(line_id, is_registered) VALUE ('{}', {})".format(line_id, is_registered)
+        cursor.execute(statement)
+        connection.commit()
+    except database.errors as e:
+        print("Error retrieving entry from database: {}".format(e))
+
+
+def update_line_registry(line_id, is_registered):
+    try:
+        statement = "UPDATE line_registry SET is_registered = {} WHERE line_id = '{}'".format(is_registered, line_id)
         cursor.execute(statement)
         connection.commit()
     except database.errors as e:
