@@ -51,35 +51,39 @@ def handle_message(event):
     line_id = event.source.user_id
     received_message = event.message.text
     reply_token = event.reply_token
-
     want_register = {}
     temp_register_id = {}
     temp_register_birthday = {}
     if want_register.get(line_id):
-        if extras.is_id_legal(received_message):
-            temp_register_id.pop(line_id, received_message)
-            reply_message = "請依照範例輸入您的出生年月日 ex:1999/9/9"
-            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
-        elif not extras.is_id_legal(received_message):
-            reply_message = "您輸入的格式不符, 請再輸入一次!"
-            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
-        elif line_id in temp_register_id:
-            if extras.is_date(received_message):
+        if line_id not in temp_register_id:  # 如果沒有輸入過身分證字號
+            if extras.is_id_legal(received_message):  # 如果身份證字號符合規格
+                temp_register_id.pop(line_id, received_message)
+                reply_message = "請依照範例輸入您的出生年月日 ex:1999/9/9"
+                line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+            elif not extras.is_id_legal(received_message):  # 如果身份證字號不符合規格
+                reply_message = "您輸入的格式不符, 請再輸入一次!"
+                line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+        elif line_id in temp_register_id:  # 如果輸入過身分證字號
+            if extras.is_date(received_message):  # 檢查生日是否符合規格
                 temp_register_birthday.pop(line_id, received_message)
                 if temp_register_id.get(line_id) == database.get_patient_info(
                         temp_register_id.get(line_id).get('id')) & temp_register_birthday.get(
                     line_id) == database.get_patient_info(
-                    temp_register_birthday.get(line_id).get('birthday')):
+                    temp_register_id.get(line_id).get('birthday')):  # 驗證病人資料是否與資料庫相符
                     want_register.update(line_id, False)
                     database.update_patient_line_id(temp_register_id.get(line_id), line_id)
                     database.update_line_registry(line_id, True)
+                    temp_register_id.clear(line_id)
+                    temp_register_birthday(line_id)
                     reply_message = "成功綁定"
                     line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
                 else:
                     want_register.update(line_id, False)
+                    temp_register_id.clear(line_id)
+                    temp_register_birthday(line_id)
                     reply_message = "查無此人"
                     line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
-            elif not extras.is_date(received_message):
+            elif not extras.is_date(received_message):  # 如果輸入的生日不符合規格
                 reply_message = "您輸入的格式不符, 請再輸入一次!"
                 line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
