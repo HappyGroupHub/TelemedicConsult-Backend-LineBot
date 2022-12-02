@@ -63,8 +63,9 @@ def is_line_registered(line_id):
         for result in cursor:
             is_registered = result
         return list(is_registered)[0]
-    except database.errors as e:
-        print("Error retrieving entry from database: {}".format(e))
+    except (TypeError, UnboundLocalError):
+        print("Error retrieving entry from database, no matching results")
+        return "Error"
 
 
 def create_line_registry(line_id, is_registered):

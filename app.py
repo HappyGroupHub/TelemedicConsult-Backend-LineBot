@@ -95,17 +95,16 @@ def handle_message(event):
                 line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
     if received_message == "綁定Line帳號":
-        try:
-            database.is_line_registered(line_id)  # 確認病人在line_registry資料表中有資料
-        except TypeError:  # 若沒有則新增
+        if database.is_line_registered(line_id) == "Error":  # 確認病人在line_registry資料表中有資料
             database.create_line_registry(event.source.user_id, False)
-        if not database.is_line_registered(line_id):
-            want_register[line_id] = True
-            reply_message = "請輸入您的身分證字號"
-            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
-        else:
-            reply_message = "您已經綁定Line帳號囉！ 若要重新綁定請點選會員服務"
-            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+            print("Line ID: {}\nDebug: Can't find user in line_registry table, create one by default".format(line_id))
+            if not database.is_line_registered(line_id):
+                want_register[line_id] = True
+                reply_message = "請輸入您的身分證字號"
+                line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+            else:
+                reply_message = "您已經綁定Line帳號囉！ 若要重新綁定請點選會員服務"
+                line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
     # TODO(LD) Rename alt_text, it looks stupid now
     if received_message == "會員服務":
