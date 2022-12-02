@@ -184,10 +184,9 @@ def handle_message(event):
             reply_message = "你的Line帳號已經綁定過囉! 想不想重新綁定，請回答'是'或'不是'"
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
-    # TODO(LD) Rename alt_text, it looks stupid now
     if message_received == "會員服務":
         carousel_template_message = TemplateSendMessage(
-            alt_text="目錄 template",
+            alt_text="會員服務",
             template=CarouselTemplate(
                 columns=[
                     CarouselColumn(
@@ -217,10 +216,9 @@ def handle_message(event):
             )
         )
         line_bot_api.reply_message(reply_token, carousel_template_message)
-
     if message_received == "掛號":
         carousel_template_message = TemplateSendMessage(
-            alt_text="目錄 template",
+            alt_text="掛號",
             template=CarouselTemplate(
                 columns=[
                     CarouselColumn(
@@ -252,7 +250,7 @@ def handle_message(event):
         line_bot_api.reply_message(reply_token, carousel_template_message)
     if message_received == "看診進度":
         carousel_template_message = TemplateSendMessage(
-            alt_text="目錄 template",
+            alt_text="看診進度",
             template=CarouselTemplate(
                 columns=[
                     CarouselColumn(
