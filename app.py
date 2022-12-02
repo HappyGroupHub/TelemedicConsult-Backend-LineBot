@@ -78,7 +78,28 @@ def handle_message(event):
                 reply_message = "您輸入的格式不符, 請再輸入一次!"
                 line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
         elif line_id in temp_register_id:  # 如果輸入過身分證字號
-            if extras.is_date(message_received):  # 如果生日符合規格
+            if want_re_register[line_id]:  # 如果病人已在其他裝置上完成LINE綁定, 詢問是否複寫並重新綁定
+                if message_received == "要":
+                    want_register[line_id] = False
+                    want_re_register[line_id] = False
+                    database.update_patient_line_id(temp_register_id.get(line_id), line_id)
+                    database.update_line_registry(line_id, True)
+                    temp_register_id.pop(line_id)
+                    temp_register_birthday.pop(line_id)
+                    reply_message = "成功轉移綁定至此Line帳號，以前的帳號不能用囉的沙小警語"
+                    line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+                elif message_received == "不要":
+                    want_register[line_id] = False
+                    want_re_register[line_id] = False
+                    temp_register_id.pop(line_id)
+                    temp_register_birthday.pop(line_id)
+                    reply_message = "取消重新綁定的流程"
+                    line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+                else:
+                    # TODO(LD) Dunno why error here, but works properly
+                    reply_message = "我看不懂你在工三小，重新輸入"
+                    line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+            elif extras.is_date(message_received):  # 如果生日符合規格
                 temp_register_birthday[line_id] = datetime.strptime(message_received, '%Y/%m/%d')
                 if database.get_patient_info(temp_register_id.get(line_id)) == "Error":  # 如果無法用ID查到該病人
                     print(
@@ -102,12 +123,11 @@ def handle_message(event):
                             temp_register_birthday.pop(line_id)
                             reply_message = "成功綁定"
                             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+                        # TODO(LD) Dunno why error here, but works properly
                         elif database.get_patient_info(temp_register_id.get(line_id)).get(
-                                'line_id') is not None:  # 如果該病人已綁定過LINE
-                            want_register[line_id] = False
-                            temp_register_id.pop(line_id)
-                            temp_register_birthday.pop(line_id)
-                            reply_message = "此用戶已在其他裝置上完成LINE綁定作業，若想重新綁定請使用會員服務"
+                                'line_id') is not None:  # 如果病人已在其他裝置上完成LINE綁定, 詢問是否重新綁定
+                            want_re_register[line_id] = True
+                            reply_message = "此用戶已在其他裝置上完成LINE綁定作業，各種警告語，是否進行覆寫並重新綁定"
                             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
                     else:  # 病人生日與資料庫不相符
                         want_register[line_id] = False
@@ -118,6 +138,20 @@ def handle_message(event):
             elif not extras.is_date(message_received):  # 如果生日不符合規格
                 reply_message = "您輸入的格式不符, 請再輸入一次!"
                 line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+
+    if want_re_register.get(line_id):
+        if message_received == "是":
+            want_re_register[line_id] = False
+            want_register[line_id] = True
+            reply_message = "請輸入您的身分證字號"
+            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+        elif message_received == "不是":
+            want_re_register[line_id] = False
+            reply_message = "已取消"
+            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+        else:
+            reply_message = "確認失敗，請重新輸入"
+            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
     if message_received == "綁定Line帳號":
         if database.is_line_registered(line_id) == "Error":  # 如果病人在line_registry資料表中沒有資料
@@ -130,32 +164,26 @@ def handle_message(event):
             want_register[line_id] = True
             reply_message = "請輸入您的身分證字號"
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
-        else:
+        else:  # 病人在line_registry有資料但為True
             reply_message = "您已經綁定Line帳號囉！ 若要重新綁定請點選會員服務"
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
-    if message_received == "重新綁定LINE":
-        # 如果病人在line_registry資料表中沒有資料 或 病人在line_registry有資料但為False
-        if database.is_line_registered(line_id) == "Error" or not database.is_line_registered(line_id):
+    if message_received == "重新綁定Line帳號":
+        if database.is_line_registered(line_id) == "Error":  # 如果病人在line_registry資料表中沒有資料
             database.create_line_registry(event.source.user_id, False)
             print("Line ID: {}\nDebug: Can't find user in line_registry table, create one by default".format(line_id))
             want_re_register[line_id] = True
-            reply_message = "您尚未註冊Line , 是否進行初次綁定帳號，請回答'是'或'不是'"
+            reply_message = "您尚未綁定Line帳號，是否進行初次綁定帳號，請回答'是'或'不是'"
+            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+        elif not database.is_line_registered(line_id):  # 病人在line_registry有資料但為False
+            want_re_register[line_id] = True
+            reply_message = "您尚未綁定Line帳號，是否進行初次綁定帳號，請回答'是'或'不是'"
+            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+        else:  # 病人在line_registry有資料但為True
+            want_re_register[line_id] = True
+            reply_message = "此Line帳號已經綁定其他用戶, 想不想重新綁定，請回答'是'或'不是'"
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
-    if want_re_register.get(line_id):
-        if message_received == "是":
-            reply_message = "進行初次綁定帳號，請輸入身分證字號"
-            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
-            want_re_register[line_id] = False
-            want_register[line_id] = True
-        if message_received == "不是":
-            want_re_register[line_id] = False
-            reply_message = "已取消"
-            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
-        else:
-            reply_message = "確認失敗，請重新輸入"
-            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
     # TODO(LD) Rename alt_text, it looks stupid now
     if message_received == "會員服務":
         carousel_template_message = TemplateSendMessage(
@@ -180,8 +208,8 @@ def handle_message(event):
                         text='請選擇',
                         actions=[
                             MessageAction(
-                                label='重新綁定LINE',
-                                text='重新綁定LINE'
+                                label='點我重新綁定Line帳號',
+                                text='重新綁定Line帳號'
                             )
                         ]
                     ),
