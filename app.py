@@ -55,23 +55,32 @@ def handle_join(event):
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     line_id = event.source.user_id
-    received_message = event.message.text
+    message_received = event.message.text
     reply_token = event.reply_token
 
-    # TODO(LD) Create an if statement for user to leave binding process
     # TODO(LD) Improve reply messages
+    # TODO(LD) Check if patient has bind Line account via get_patient_info
     if want_register.get(line_id):
-        if line_id not in temp_register_id:  # 如果沒有輸入過身分證字號
-            if extras.is_id_legal(received_message):  # 如果身份證字號符合規格
-                temp_register_id[line_id] = received_message
+        if message_received == "離開":
+            want_register[line_id] = False
+            try:
+                print("離開成功")
+                reply_message = "已離開綁定程序"
+                line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+                temp_register_id.pop(line_id)
+            except KeyError:
+                return 0
+        elif line_id not in temp_register_id:  # 如果沒有輸入過身分證字號
+            if extras.is_id_legal(message_received):  # 如果身份證字號符合規格
+                temp_register_id[line_id] = message_received
                 reply_message = "請依照範例輸入您的出生年月日 ex:1999/09/09"
                 line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
-            elif not extras.is_id_legal(received_message):  # 如果身份證字號不符合規格
+            elif not extras.is_id_legal(message_received):  # 如果身份證字號不符合規格
                 reply_message = "您輸入的格式不符, 請再輸入一次!"
                 line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
         elif line_id in temp_register_id:  # 如果輸入過身分證字號
-            if extras.is_date(received_message):  # 檢查生日是否符合規格
-                temp_register_birthday[line_id] = datetime.strptime(received_message, '%Y/%m/%d')
+            if extras.is_date(message_received):  # 檢查生日是否符合規格
+                temp_register_birthday[line_id] = datetime.strptime(message_received, '%Y/%m/%d')
                 if database.get_patient_info(temp_register_id.get(line_id)) == "Error":  # 用ID確認是否有此病人
                     print(
                         "Line ID: {}\nDebug: Can't find patient's ID in patient_base table while binding Line account".format(
@@ -98,15 +107,18 @@ def handle_message(event):
                         temp_register_birthday.pop(line_id)
                         reply_message = "查無此人"
                         line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
-            elif not extras.is_date(received_message):  # 如果輸入的生日不符合規格
+            elif not extras.is_date(message_received):  # 如果輸入的生日不符合規格
                 reply_message = "您輸入的格式不符, 請再輸入一次!"
                 line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
-    if received_message == "綁定Line帳號":
+    if message_received == "綁定Line帳號":
         if database.is_line_registered(line_id) == "Error":  # 確認病人在line_registry資料表中有資料
             database.create_line_registry(event.source.user_id, False)
             print("Line ID: {}\nDebug: Can't find user in line_registry table, create one by default".format(line_id))
-        elif not database.is_line_registered(line_id):
+            want_register[line_id] = True
+            reply_message = "請輸入您的身分證字號"
+            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+        elif not database.is_line_registered(line_id):  # 病人在line_registry有資料但為False
             want_register[line_id] = True
             reply_message = "請輸入您的身分證字號"
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
@@ -115,7 +127,7 @@ def handle_message(event):
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
     # TODO(LD) Rename alt_text, it looks stupid now
-    if received_message == "會員服務":
+    if message_received == "會員服務":
         carousel_template_message = TemplateSendMessage(
             alt_text="目錄 template",
             template=CarouselTemplate(
@@ -148,7 +160,7 @@ def handle_message(event):
         )
         line_bot_api.reply_message(reply_token, carousel_template_message)
 
-    if received_message == "掛號":
+    if message_received == "掛號":
         carousel_template_message = TemplateSendMessage(
             alt_text="目錄 template",
             template=CarouselTemplate(
@@ -180,7 +192,7 @@ def handle_message(event):
             )
         )
         line_bot_api.reply_message(reply_token, carousel_template_message)
-    if received_message == "看診進度":
+    if message_received == "看診進度":
         carousel_template_message = TemplateSendMessage(
             alt_text="目錄 template",
             template=CarouselTemplate(
