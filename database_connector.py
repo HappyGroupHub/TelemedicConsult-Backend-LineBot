@@ -43,6 +43,9 @@ def get_patient_info(patient_id):
             'line_id': list(results)[13]
         }
         return patient_info
+    except (TypeError, UnboundLocalError):
+        print("Error retrieving entry from database, no matching results")
+        return "Error"
     except database.errors as e:
         print("Error retrieving entry from database: {}".format(e))
 
@@ -66,6 +69,8 @@ def is_line_registered(line_id):
     except (TypeError, UnboundLocalError):
         print("Error retrieving entry from database, no matching results")
         return "Error"
+    except database.errors as e:
+        print("Error retrieving entry from database: {}".format(e))
 
 
 def create_line_registry(line_id, is_registered):
