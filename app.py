@@ -21,6 +21,7 @@ database = database_connector
 extras = extra_functions
 
 want_register = {}
+want_re_register = {}
 temp_register_id = {}
 temp_register_birthday = {}
 
@@ -119,7 +120,7 @@ def handle_message(event):
                 line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
     if message_received == "綁定Line帳號":
-        if database.is_line_registered(line_id) == "Error":  # 確認病人在line_registry資料表中有沒有資料
+        if database.is_line_registered(line_id) == "Error":  # 如果病人在line_registry資料表中沒有資料
             database.create_line_registry(event.source.user_id, False)
             print("Line ID: {}\nDebug: Can't find user in line_registry table, create one by default".format(line_id))
             want_register[line_id] = True
@@ -133,6 +134,28 @@ def handle_message(event):
             reply_message = "您已經綁定Line帳號囉！ 若要重新綁定請點選會員服務"
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
+    if message_received == "重新綁定LINE":
+        # 如果病人在line_registry資料表中沒有資料 或 病人在line_registry有資料但為False
+        if database.is_line_registered(line_id) == "Error" or not database.is_line_registered(line_id):
+            database.create_line_registry(event.source.user_id, False)
+            print("Line ID: {}\nDebug: Can't find user in line_registry table, create one by default".format(line_id))
+            want_re_register[line_id] = True
+            reply_message = "您尚未註冊Line , 是否進行初次綁定帳號，請回答'是'或'不是'"
+            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+
+    if want_re_register.get(line_id):
+        if message_received == "是":
+            reply_message = "進行初次綁定帳號，請輸入身分證字號"
+            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+            want_re_register[line_id] = False
+            want_register[line_id] = True
+        if message_received == "不是":
+            want_re_register[line_id] = False
+            reply_message = "已取消"
+            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+        else:
+            reply_message = "確認失敗，請重新輸入"
+            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
     # TODO(LD) Rename alt_text, it looks stupid now
     if message_received == "會員服務":
         carousel_template_message = TemplateSendMessage(
