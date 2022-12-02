@@ -96,7 +96,6 @@ def handle_message(event):
                     reply_message = "取消重新綁定的流程"
                     line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
                 else:
-                    # TODO(LD) Dunno why error here, but works properly
                     reply_message = "確認失敗，請重新輸入"
                     line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
             elif extras.is_date(message_received):  # 如果生日符合規格
@@ -123,27 +122,25 @@ def handle_message(event):
                             temp_register_birthday.pop(line_id)
                             reply_message = "成功綁定"
                             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
-                        # TODO(LD) Dunno why error here, but works properly
                         elif database.get_patient_info(temp_register_id.get(line_id)).get(
                                 'line_id') is not None:  # 如果病人已在其他裝置上完成LINE綁定, 詢問是否重新綁定
                             want_re_register[line_id] = True
-                        want_re_register[line_id] = True
-                        line_bot_api.push_message(line_id, TemplateSendMessage(
-                            alt_text='已在其他裝置上完成LINE綁定，是否重新綁定?',
-                            template=ConfirmTemplate(
-                                text='是否確定重新綁定並轉移帳號?(注意:如果轉移帳號將會斷開和舊裝置的連接)',
-                                actions=[
-                                    MessageAction(
-                                        label='確定',
-                                        text='確定'
-                                    ),
-                                    MessageAction(
-                                        label='取消',
-                                        text='取消'
-                                    )
-                                ]
-                            )
-                        ))
+                            line_bot_api.push_message(line_id, TemplateSendMessage(
+                                alt_text="已在其他裝置上完成LINE綁定，是否重新綁定?",
+                                template=ConfirmTemplate(
+                                    text="是否確定重新綁定並轉移帳號?(注意:如果轉移帳號將會斷開和舊裝置的連接)",
+                                    actions=[
+                                        MessageAction(
+                                            label="確定",
+                                            text="確定"
+                                        ),
+                                        MessageAction(
+                                            label="取消",
+                                            text="取消"
+                                        )
+                                    ]
+                                )
+                            ))
                     else:  # 病人生日與資料庫不相符
                         want_register.pop(line_id)
                         temp_register_id.pop(line_id)
@@ -154,7 +151,7 @@ def handle_message(event):
                 reply_message = "您輸入的格式不符, 請再輸入一次!"
                 line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
-    if want_re_register.get(line_id):
+    if want_re_register.get(line_id) and not want_register.get(line_id):
         if message_received == "確定":
             want_re_register.pop(line_id)
             want_register[line_id] = True
@@ -165,9 +162,22 @@ def handle_message(event):
             reply_message = "已取消"
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
         else:
-            # TODO(K) Fix this god damn bug
-            reply_message = "確認失敗，請重新輸入"
-            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+            line_bot_api.push_message(line_id, TemplateSendMessage(
+                alt_text="無法辨識訊息，請重新選擇",
+                template=ConfirmTemplate(
+                    text="無法辨識訊息，請重新選擇",
+                    actions=[
+                        MessageAction(
+                            label="確定",
+                            text="確定"
+                        ),
+                        MessageAction(
+                            label="取消",
+                            text="取消"
+                        )
+                    ]
+                )
+            ))
 
     if message_received == "綁定Line帳號":
         if database.is_line_registered(line_id) == "Error":  # 如果病人在line_registry資料表中沒有資料
@@ -189,38 +199,36 @@ def handle_message(event):
             database.create_line_registry(event.source.user_id, False)
             print("Line ID: {}\nDebug: Can't find user in line_registry table, create one by default".format(line_id))
             want_re_register[line_id] = True
-            want_re_register[line_id] = True
             line_bot_api.push_message(line_id, TemplateSendMessage(
-                alt_text='尚未綁定Line帳號，是否進行初次綁定帳號',
+                alt_text="尚未綁定Line帳號，是否進行初次綁定帳號",
                 template=ConfirmTemplate(
-                    text='您尚未綁定Line帳號，是否進行初次綁定帳號?',
+                    text="您尚未綁定Line帳號，是否進行初次綁定帳號?",
                     actions=[
                         MessageAction(
-                            label='確定',
-                            text='確定'
+                            label="確定",
+                            text="確定"
                         ),
                         MessageAction(
-                            label='取消',
-                            text='取消'
+                            label="取消",
+                            text="取消"
                         )
                     ]
                 )
             ))
         elif not database.is_line_registered(line_id):  # 病人在line_registry有資料但為False
             want_re_register[line_id] = True
-            want_re_register[line_id] = True
             line_bot_api.push_message(line_id, TemplateSendMessage(
-                alt_text='尚未綁定Line帳號，是否進行初次綁定帳號',
+                alt_text="尚未綁定Line帳號，是否進行初次綁定帳號",
                 template=ConfirmTemplate(
-                    text='您尚未綁定Line帳號，是否進行初次綁定帳號?',
+                    text="您尚未綁定Line帳號，是否進行初次綁定帳號?",
                     actions=[
                         MessageAction(
-                            label='確定',
-                            text='確定'
+                            label="確定",
+                            text="確定"
                         ),
                         MessageAction(
-                            label='取消',
-                            text='取消'
+                            label="取消",
+                            text="取消"
                         )
                     ]
                 )
@@ -228,17 +236,17 @@ def handle_message(event):
         else:  # 病人在line_registry有資料但為True
             want_re_register[line_id] = True
             line_bot_api.push_message(line_id, TemplateSendMessage(
-                alt_text='綁定過帳號了，要不要重新綁定',
+                alt_text="綁定過帳號了，要不要重新綁定",
                 template=ConfirmTemplate(
-                    text='您已綁定過Line帳號，請問是否要重新綁定?',
+                    text="您已綁定過Line帳號，請問是否要重新綁定?",
                     actions=[
                         MessageAction(
-                            label='確定',
-                            text='確定'
+                            label="確定",
+                            text="確定"
                         ),
                         MessageAction(
-                            label='取消',
-                            text='取消'
+                            label="取消",
+                            text="取消"
                         )
                     ]
                 )
