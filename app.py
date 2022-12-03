@@ -22,6 +22,14 @@ want_re_register = {}
 temp_register_id = {}
 temp_register_birthday = {}
 
+
+def processing_tasks(line_id):
+    if want_register.get(line_id) or want_re_register.get(line_id):
+        return True
+    else:
+        return False
+
+
 app = Flask(__name__)
 
 
@@ -176,7 +184,7 @@ def handle_message(event):
                 )
             ))
 
-    if message_received == "綁定Line帳號":
+    if message_received == "綁定Line帳號" and not processing_tasks(line_id):
         if database.is_line_registered(line_id) == "Error":  # 如果病人在line_registry資料表中沒有資料
             database.create_line_registry(event.source.user_id, False)
             print("Line ID: {}\nDebug: Can't find user in line_registry table, create one by default".format(line_id))
@@ -191,7 +199,7 @@ def handle_message(event):
             reply_message = "您已經綁定Line帳號囉！ 若要重新綁定請點選會員服務"
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
-    if message_received == "重新綁定Line帳號":
+    if message_received == "重新綁定Line帳號" and not processing_tasks(line_id):
         if database.is_line_registered(line_id) == "Error":  # 如果病人在line_registry資料表中沒有資料
             database.create_line_registry(event.source.user_id, False)
             print("Line ID: {}\nDebug: Can't find user in line_registry table, create one by default".format(line_id))
@@ -249,7 +257,7 @@ def handle_message(event):
                 )
             ))
 
-    if message_received == "會員服務":
+    if message_received == "會員服務" and not processing_tasks(line_id):
         carousel_template_message = TemplateSendMessage(
             alt_text="會員服務",
             template=CarouselTemplate(
@@ -282,7 +290,7 @@ def handle_message(event):
         )
         line_bot_api.reply_message(reply_token, carousel_template_message)
 
-    if message_received == "掛號":
+    if message_received == "掛號" and not processing_tasks(line_id):
         carousel_template_message = TemplateSendMessage(
             alt_text="掛號",
             template=CarouselTemplate(
@@ -315,7 +323,7 @@ def handle_message(event):
         )
         line_bot_api.reply_message(reply_token, carousel_template_message)
 
-    if message_received == "看診進度":
+    if message_received == "看診進度" and not processing_tasks(line_id):
         carousel_template_message = TemplateSendMessage(
             alt_text="看診進度",
             template=CarouselTemplate(
