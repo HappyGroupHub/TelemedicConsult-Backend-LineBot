@@ -8,17 +8,14 @@ from linebot.models import MessageEvent, TextMessage, TemplateSendMessage, Carou
     MessageAction, TextSendMessage, FollowEvent, ConfirmTemplate
 from yaml.loader import SafeLoader
 
-import database_connector
-import extra_functions
+import database as database
+import utilities as utils
 
 with open('config.yml', 'r') as f:
     config = yaml.load(f, Loader=SafeLoader)
 
 line_bot_api = LineBotApi(config['Line']['channel_access_token'])
 handler = WebhookHandler(config['Line']['channel_secret'])
-
-database = database_connector
-extras = extra_functions
 
 want_register = {}
 want_re_register = {}
@@ -70,11 +67,11 @@ def handle_message(event):
             except KeyError:
                 return 0
         elif line_id not in temp_register_id:  # 如果沒有輸入過身分證字號
-            if extras.is_id_legal(message_received):  # 如果身份證字號符合規格
+            if utils.is_id_legal(message_received):  # 如果身份證字號符合規格
                 temp_register_id[line_id] = message_received
                 reply_message = "請依照範例輸入您的出生年月日 ex:1999/09/09"
                 line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
-            elif not extras.is_id_legal(message_received):  # 如果身份證字號不符合規格
+            elif not utils.is_id_legal(message_received):  # 如果身份證字號不符合規格
                 reply_message = "您輸入的格式不符, 請再輸入一次!"
                 line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
         elif line_id in temp_register_id:  # 如果輸入過身分證字號
@@ -98,7 +95,7 @@ def handle_message(event):
                 else:
                     reply_message = "確認失敗，請重新輸入"
                     line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
-            elif extras.is_date(message_received):  # 如果生日符合規格
+            elif utils.is_date(message_received):  # 如果生日符合規格
                 temp_register_birthday[line_id] = datetime.strptime(message_received, '%Y/%m/%d')
                 if database.get_patient_info(temp_register_id.get(line_id)) == "Error":  # 如果無法用ID查到該病人
                     print(
@@ -147,7 +144,7 @@ def handle_message(event):
                         temp_register_birthday.pop(line_id)
                         reply_message = "查無此人"
                         line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
-            elif not extras.is_date(message_received):  # 如果生日不符合規格
+            elif not utils.is_date(message_received):  # 如果生日不符合規格
                 reply_message = "您輸入的格式不符, 請再輸入一次!"
                 line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
@@ -284,6 +281,7 @@ def handle_message(event):
             )
         )
         line_bot_api.reply_message(reply_token, carousel_template_message)
+
     if message_received == "掛號":
         carousel_template_message = TemplateSendMessage(
             alt_text="掛號",
@@ -316,6 +314,7 @@ def handle_message(event):
             )
         )
         line_bot_api.reply_message(reply_token, carousel_template_message)
+
     if message_received == "看診進度":
         carousel_template_message = TemplateSendMessage(
             alt_text="看診進度",
