@@ -130,7 +130,7 @@ def handle_message(event):
                         elif database.get_patient_info(temp_register_id.get(line_id)).get(
                                 'line_id') is not None:  # 如果病人已在其他裝置上完成LINE綁定, 詢問是否重新綁定
                             want_re_register[line_id] = True
-                            line_bot_api.push_message(line_id, TemplateSendMessage(
+                            template_message = TemplateSendMessage(
                                 alt_text="已在其他裝置上完成LINE綁定，是否重新綁定?",
                                 template=ConfirmTemplate(
                                     text="是否確定重新綁定並轉移帳號?(注意:如果轉移帳號將會斷開和舊裝置的連接)",
@@ -145,7 +145,8 @@ def handle_message(event):
                                         )
                                     ]
                                 )
-                            ))
+                            )
+                            line_bot_api.reply_message(reply_token, template_message)
                     else:  # 病人生日與資料庫不相符
                         want_register.pop(line_id)
                         temp_register_id.pop(line_id)
@@ -167,7 +168,7 @@ def handle_message(event):
             reply_message = "已取消"
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
         else:
-            line_bot_api.push_message(line_id, TemplateSendMessage(
+            template_message = TemplateSendMessage(
                 alt_text="無法辨識訊息，請重新選擇",
                 template=ConfirmTemplate(
                     text="無法辨識訊息，請重新選擇",
@@ -182,7 +183,8 @@ def handle_message(event):
                         )
                     ]
                 )
-            ))
+            )
+            line_bot_api.reply_message(reply_token, template_message)
 
     if message_received == "綁定Line帳號" and not processing_tasks(line_id):
         if database.is_line_registered(line_id) == "Error":  # 如果病人在line_registry資料表中沒有資料
@@ -204,7 +206,7 @@ def handle_message(event):
             database.create_line_registry(event.source.user_id, False)
             print("Line ID: {}\nDebug: Can't find user in line_registry table, create one by default".format(line_id))
             want_re_register[line_id] = True
-            line_bot_api.push_message(line_id, TemplateSendMessage(
+            template_message = TemplateSendMessage(
                 alt_text="尚未綁定Line帳號，是否進行初次綁定帳號",
                 template=ConfirmTemplate(
                     text="您尚未綁定Line帳號，是否進行初次綁定帳號?",
@@ -219,10 +221,11 @@ def handle_message(event):
                         )
                     ]
                 )
-            ))
+            )
+            line_bot_api.reply_message(reply_token, template_message)
         elif not database.is_line_registered(line_id):  # 病人在line_registry有資料但為False
             want_re_register[line_id] = True
-            line_bot_api.push_message(line_id, TemplateSendMessage(
+            template_message = TemplateSendMessage(
                 alt_text="尚未綁定Line帳號，是否進行初次綁定帳號",
                 template=ConfirmTemplate(
                     text="您尚未綁定Line帳號，是否進行初次綁定帳號?",
@@ -237,10 +240,11 @@ def handle_message(event):
                         )
                     ]
                 )
-            ))
+            )
+            line_bot_api.reply_message(reply_token, template_message)
         else:  # 病人在line_registry有資料但為True
             want_re_register[line_id] = True
-            line_bot_api.push_message(line_id, TemplateSendMessage(
+            template_message = TemplateSendMessage(
                 alt_text="綁定過帳號了，要不要重新綁定",
                 template=ConfirmTemplate(
                     text="您已綁定過Line帳號，請問是否要重新綁定?",
@@ -255,7 +259,8 @@ def handle_message(event):
                         )
                     ]
                 )
-            ))
+            )
+            line_bot_api.reply_message(reply_token, template_message)
 
     if message_received == "會員服務" and not processing_tasks(line_id):
         carousel_template_message = TemplateSendMessage(
