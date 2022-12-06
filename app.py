@@ -285,8 +285,8 @@ def handle_message(event):
                     ),
                     CarouselColumn(
                         thumbnail_image_url="https://cdn.discordapp.com/attachments/849850854743474187/1047449023772102686/169.png",
-                        title='會員服務選擇',
-                        text='請選擇',
+                        title='重新綁定Line帳號',
+                        text='若您已綁定過Line帳號，請選擇重新綁定即可轉移帳號至新裝置',
                         actions=[
                             MessageAction(
                                 label='點我重新綁定Line帳號',
@@ -300,70 +300,11 @@ def handle_message(event):
         line_bot_api.reply_message(reply_token, carousel_template_message)
 
     if message_received == "掛號" and not processing_tasks(line_id):
-        carousel_template_message = TemplateSendMessage(
-            alt_text="掛號",
-            template=CarouselTemplate(
-                columns=[
-                    CarouselColumn(
-                        thumbnail_image_url="https://chickencutcut.files.wordpress.com/2015/05/img_6082.jpg",
-                        title="初次使用請綁定Line",
-                        text="若您已經在官網填寫完資料後，需要綁定Line即可使用完整服務",
-                        actions=[
-                            MessageAction(
-                                label="點我綁定Line帳號",
-                                text="綁定Line帳號"
-                            ),
-
-                        ]
-                    ),
-                    CarouselColumn(
-                        thumbnail_image_url="https://cdn.discordapp.com/attachments/849850854743474187/1047449023772102686/169.png",
-                        title='會員服務選擇',
-                        text='請選擇',
-                        actions=[
-                            MessageAction(
-                                label='重新綁定LINE',
-                                text='重新綁定LINE'
-                            )
-                        ]
-                    ),
-                ]
-            )
-        )
-        line_bot_api.reply_message(reply_token, carousel_template_message)
-
+        reply_message = "開發中..."
+        line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
     if message_received == "看診進度" and not processing_tasks(line_id):
-        carousel_template_message = TemplateSendMessage(
-            alt_text="看診進度",
-            template=CarouselTemplate(
-                columns=[
-                    CarouselColumn(
-                        thumbnail_image_url="https://chickencutcut.files.wordpress.com/2015/05/img_6082.jpg",
-                        title="初次使用請綁定Line",
-                        text="若您已經在官網填寫完資料後，需要綁定Line即可使用完整服務",
-                        actions=[
-                            MessageAction(
-                                label="點我綁定Line帳號",
-                                text="綁定Line帳號"
-                            ),
-
-                        ]
-                    ),
-                    CarouselColumn(
-                        thumbnail_image_url="https://cdn.discordapp.com/attachments/849850854743474187/1047449023772102686/169.png",
-                        title='會員服務選擇',
-                        text='請選擇',
-                        actions=[
-                            MessageAction(
-                                label='重新綁定LINE',
-                                text='重新綁定LINE'
-                            )
-                        ]
-                    ),
-                ]
-            )
-        )
-        line_bot_api.reply_message(reply_token, carousel_template_message)
+        reply_message = "開發中..."
+        line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
 
 if __name__ == "__main__":
