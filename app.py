@@ -87,12 +87,16 @@ def handle_message(event):
                 if message_received == "確定":
                     want_register.pop(line_id)
                     want_re_register.pop(line_id)
+                    old_lind_id = database.get_patient_info(temp_register_id.get(line_id)).get('line_id')
                     database.update_patient_line_id(temp_register_id.get(line_id), line_id)
+                    database.update_line_registry(old_lind_id, False)
                     database.update_line_registry(line_id, True)
                     temp_register_id.pop(line_id)
                     temp_register_birthday.pop(line_id)
                     reply_message = "成功轉Line帳號，已斷開和舊裝置的連結"
+                    push_message = "您已經轉移綁定至其他Line帳號，此裝置原有的連線已中斷，若你認為這是個錯誤請回報客服"
                     line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+                    line_bot_api.push_message(old_lind_id, TextSendMessage(text=push_message))
                 elif message_received == "取消":
                     want_register.pop(line_id)
                     want_re_register.pop(line_id)
