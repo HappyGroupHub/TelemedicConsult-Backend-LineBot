@@ -77,10 +77,10 @@ def handle_message(event):
         elif line_id not in temp_register_id:  # 如果沒有輸入過身分證字號
             if utils.is_id_legal(message_received):  # 如果身份證字號符合規格
                 temp_register_id[line_id] = message_received
-                reply_message = "請依照範例輸入您的出生年月日 ex:1999/09/09"
+                reply_message = "請輸入您的出生年月日\n範例:1999/09/09"
                 line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
             elif not utils.is_id_legal(message_received):  # 如果身份證字號不符合規格
-                reply_message = "您輸入的格式不符, 請再輸入一次!"
+                reply_message = "身分證字號格式有誤，請再輸入一次\n注意：若要退出請輸入『離開』"
                 line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
         elif line_id in temp_register_id:  # 如果輸入過身分證字號
             if want_re_register.get(line_id):  # 如果病人已在其他裝置上完成LINE綁定, 詢問是否複寫並重新綁定
@@ -93,7 +93,7 @@ def handle_message(event):
                     database.update_line_registry(line_id, True)
                     temp_register_id.pop(line_id)
                     temp_register_birthday.pop(line_id)
-                    reply_message = "成功轉Line帳號，已斷開和舊裝置的連結"
+                    reply_message = "成功轉移Line帳號，已斷開和舊裝置的連結"
                     push_message = "您已經轉移綁定至其他Line帳號，此裝置原有的連線已中斷，若你認為這是個錯誤請回報客服"
                     line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
                     line_bot_api.push_message(old_lind_id, TextSendMessage(text=push_message))
@@ -102,7 +102,7 @@ def handle_message(event):
                     want_re_register.pop(line_id)
                     temp_register_id.pop(line_id)
                     temp_register_birthday.pop(line_id)
-                    reply_message = "取消重新綁定的流程"
+                    reply_message = "取消重新綁定流程"
                     line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
                 else:
                     reply_message = "確認失敗，請重新輸入"
@@ -137,7 +137,7 @@ def handle_message(event):
                             template_message = TemplateSendMessage(
                                 alt_text="已在其他裝置上完成LINE綁定，是否重新綁定?",
                                 template=ConfirmTemplate(
-                                    text="是否確定重新綁定並轉移帳號?(注意:如果轉移帳號將會斷開和舊裝置的連接)",
+                                    text="是否確定重新綁定並轉移帳號?\n------------注意------------\n確認後將斷開和舊裝置的連接",
                                     actions=[
                                         MessageAction(
                                             label="確定",
@@ -175,7 +175,8 @@ def handle_message(event):
             template_message = TemplateSendMessage(
                 alt_text="無法辨識訊息，請重新選擇",
                 template=ConfirmTemplate(
-                    text="無法辨識訊息，請重新選擇",
+                    text="無法辨識訊息，請重新選擇\n若要要退出請則取消"
+                         "",
                     actions=[
                         MessageAction(
                             label="確定",
@@ -251,7 +252,7 @@ def handle_message(event):
             template_message = TemplateSendMessage(
                 alt_text="綁定過帳號了，要不要重新綁定",
                 template=ConfirmTemplate(
-                    text="您已綁定過Line帳號，請問是否要重新綁定?",
+                    text="您已綁定過Line帳號\n請問是否要重新綁定?",
                     actions=[
                         MessageAction(
                             label="確定",
@@ -286,7 +287,7 @@ def handle_message(event):
                     CarouselColumn(
                         thumbnail_image_url="https://cdn.discordapp.com/attachments/849850854743474187/1047449023772102686/169.png",
                         title='重新綁定Line帳號',
-                        text='若您已綁定過Line帳號，請選擇重新綁定即可轉移帳號至新裝置',
+                        text='若您已綁定過Line帳號\n請選擇重新綁定即可轉移帳號至新裝置',
                         actions=[
                             MessageAction(
                                 label='點我重新綁定Line帳號',
