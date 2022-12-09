@@ -193,7 +193,7 @@ def handle_message(event):
 
     if message_received == "綁定Line帳號" and not processing_tasks(line_id):
         if database.is_line_registered(line_id) == "Error":  # 如果病人在line_registry資料表中沒有資料
-            database.create_line_registry(event.source.user_id, False)
+            database.create_line_registry(line_id, False)
             print("Line ID: {}\nDebug: Can't find user in line_registry table, create one by default".format(line_id))
             want_register[line_id] = True
             reply_message = "請輸入您的身分證字號"
@@ -208,7 +208,7 @@ def handle_message(event):
 
     if message_received == "重新綁定Line帳號" and not processing_tasks(line_id):
         if database.is_line_registered(line_id) == "Error":  # 如果病人在line_registry資料表中沒有資料
-            database.create_line_registry(event.source.user_id, False)
+            database.create_line_registry(line_id, False)
             print("Line ID: {}\nDebug: Can't find user in line_registry table, create one by default".format(line_id))
             want_re_register[line_id] = True
             template_message = TemplateSendMessage(
@@ -309,13 +309,14 @@ def handle_message(event):
         line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
     if message_received == "獲取個人資料(測試用)" and not processing_tasks(line_id):
-        if database.is_line_registered(line_id):
+        if database.is_line_registered(line_id) == "Error" or not database.is_line_registered(line_id):
+            print("Line ID: {}\nDebug: Can't find user in line_registry table".format(line_id))
+            reply_message = "您尚未綁定Line帳號\n請先至會員服務進行初次綁定"
+            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+        elif database.is_line_registered(line_id):
             info = database.get_patient_info_by_line_id(line_id)
             reply_message = "姓名: {}\n身分證字號: {}\n生日: {}\n性別: {}".format(
                 info.get('name'), info.get('id'), info.get('birthday'), info.get('sex'))
-            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
-        elif database.is_line_registered(line_id) == "Error":
-            reply_message = "尚未綁定Line帳號，請先綁定Line帳號"
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
 
