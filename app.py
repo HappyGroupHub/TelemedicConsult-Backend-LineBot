@@ -308,10 +308,14 @@ def handle_message(event):
         line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
     if message_received == "獲取個人資料(測試用)" and not processing_tasks(line_id):
-        info = database.get_patient_info_by_line_id(line_id)
-        reply_message = "姓名: {}\n身分證字號: {}\n生日: {}\n性別: {}".format(
-            info.get('name'), info.get('id'), info.get('birthday'), info.get('sex'))
-        line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+        if database.is_line_registered(line_id):
+            info = database.get_patient_info_by_line_id(line_id)
+            reply_message = "姓名: {}\n身分證字號: {}\n生日: {}\n性別: {}".format(
+                info.get('name'), info.get('id'), info.get('birthday'), info.get('sex'))
+            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+        else:
+            reply_message = "尚未綁定Line帳號，請先綁定Line帳號"
+            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
 
 if __name__ == "__main__":
