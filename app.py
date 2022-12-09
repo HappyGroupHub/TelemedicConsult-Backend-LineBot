@@ -313,7 +313,7 @@ def handle_message(event):
             reply_message = "姓名: {}\n身分證字號: {}\n生日: {}\n性別: {}".format(
                 info.get('name'), info.get('id'), info.get('birthday'), info.get('sex'))
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
-        else:
+        elif database.is_line_registered(line_id) == "Error":
             reply_message = "尚未綁定Line帳號，請先綁定Line帳號"
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
