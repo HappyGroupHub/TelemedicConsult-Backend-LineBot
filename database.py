@@ -1,9 +1,17 @@
+"""This python file will handle all the database things."""
+
+import sys
+
 import mysql.connector as database
 import yaml
 from yaml import SafeLoader
 
-with open('config.yml', 'r') as f:
-    config = yaml.load(f, Loader=SafeLoader)
+try:
+    with open('config.yml', 'r', encoding="utf8") as f:
+        config = yaml.load(f, Loader=SafeLoader)
+except FileNotFoundError:
+    print("Config file not found, please create a config.yml file")
+    sys.exit()
 
 hostname = config['Database']['hostname']
 db_name = config['Database']['db_name']
@@ -21,8 +29,13 @@ cursor = connection.cursor()
 
 
 def get_patient_info_by_id(patient_id):
+    """Get patient info by patient id.
+
+    :param str patient_id: Registered patient id
+    :rtype: dict
+    """
     try:
-        statement = "SELECT * FROM patient_base WHERE id = '{}'".format(patient_id)
+        statement = f"SELECT * FROM patient_base WHERE id = '{patient_id}'"
         cursor.execute(statement)
         for result in cursor:
             results = result
@@ -46,13 +59,19 @@ def get_patient_info_by_id(patient_id):
     except (TypeError, UnboundLocalError):
         print("Error retrieving entry from database, no matching results")
         return "Error"
-    except database.errors as e:
-        print("Error retrieving entry from database: {}".format(e))
+    except database.errors as error:
+        print(f"Error retrieving entry from database: {error}")
+        return None
 
 
 def get_patient_info_by_line_id(line_id):
+    """Get patient info by line id.
+
+    :param str line_id: Registered line id
+    :rtype: dict
+    """
     try:
-        statement = "SELECT * FROM patient_base WHERE line_id = '{}'".format(line_id)
+        statement = f"SELECT * FROM patient_base WHERE line_id = '{line_id}'"
         cursor.execute(statement)
         for result in cursor:
             results = result
@@ -76,22 +95,33 @@ def get_patient_info_by_line_id(line_id):
     except (TypeError, UnboundLocalError):
         print("Error retrieving entry from database, no matching results")
         return "Error"
-    except database.errors as e:
-        print("Error retrieving entry from database: {}".format(e))
+    except database.errors as error:
+        print(f"Error retrieving entry from database: {error}")
+        return None
 
 
 def update_patient_line_id(patient_id, line_id):
+    """Update patient line id.
+
+    :param str patient_id: Registered patient id
+    :param str line_id: Registered line id
+    """
     try:
-        statement = "UPDATE patient_base SET line_id = '{}' WHERE id = '{}'".format(line_id, patient_id)
+        statement = f"UPDATE patient_base SET line_id = '{line_id}' WHERE id = '{patient_id}'"
         cursor.execute(statement)
         connection.commit()
-    except database.errors as e:
-        print("Error retrieving entry from database: {}".format(e))
+    except database.errors as error:
+        print(f"Error retrieving entry from database: {error}")
 
 
 def is_line_registered(line_id):
+    """Check if line id is registered.
+
+    :param str line_id: Given line id
+    :rtype: bool
+    """
     try:
-        statement = "SELECT is_registered FROM line_registry WHERE line_id = '{}'".format(line_id)
+        statement = f"SELECT is_registered FROM line_registry WHERE line_id = '{line_id}'"
         cursor.execute(statement)
         for result in cursor:
             is_registered = result
@@ -99,23 +129,38 @@ def is_line_registered(line_id):
     except (TypeError, UnboundLocalError):
         print("Error retrieving entry from database, no matching results")
         return "Error"
-    except database.errors as e:
-        print("Error retrieving entry from database: {}".format(e))
+    except database.errors as error:
+        print(f"Error retrieving entry from database: {error}")
+        return None
 
 
 def create_line_registry(line_id, is_registered):
+    """Create line registry by given line id.
+
+    This function will create a new line registry data by given line id.
+    Only use this function when the given line id is not registered in line_registry table.
+    And the is_registered parameter should be false by default.
+
+    :param str line_id: Given line id
+    :param bool is_registered: to registered or not (should be false by default)
+    """
     try:
-        statement = "INSERT INTO line_registry(line_id, is_registered) VALUE ('{}', {})".format(line_id, is_registered)
+        statement = f"INSERT INTO line_registry(line_id, is_registered) VALUE ('{line_id}', {is_registered})"
         cursor.execute(statement)
         connection.commit()
-    except database.errors as e:
-        print("Error retrieving entry from database: {}".format(e))
+    except database.errors as error:
+        print(f"Error retrieving entry from database: {error}")
 
 
 def update_line_registry(line_id, is_registered):
+    """Update line registry.
+
+    :param str line_id: Registered line id
+    :param bool is_registered: to registered or not
+    """
     try:
-        statement = "UPDATE line_registry SET is_registered = {} WHERE line_id = '{}'".format(is_registered, line_id)
+        statement = f"UPDATE line_registry SET is_registered = {is_registered} WHERE line_id = '{line_id}'"
         cursor.execute(statement)
         connection.commit()
-    except database.errors as e:
-        print("Error retrieving entry from database: {}".format(e))
+    except database.errors as error:
+        print(f"Error retrieving entry from database: {error}")
