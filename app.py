@@ -1,18 +1,27 @@
+"""This is the main file of the program."""
+
+import sys
 from datetime import datetime
 
 import yaml
 from flask import Flask, request, abort
+from flask.logging import create_logger
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextMessage, TemplateSendMessage, CarouselTemplate, CarouselColumn, \
+from linebot.models import MessageEvent, TextMessage, TemplateSendMessage, CarouselTemplate, \
+    CarouselColumn, \
     MessageAction, TextSendMessage, FollowEvent, ConfirmTemplate
 from yaml.loader import SafeLoader
 
-import database as database
+import database
 import utilities as utils
 
-with open('config.yml', 'r') as f:
-    config = yaml.load(f, Loader=SafeLoader)
+try:
+    with open('config.yml', 'r', encoding="utf8") as f:
+        config = yaml.load(f, Loader=SafeLoader)
+except FileNotFoundError:
+    print("Config file not found, please create a config.yml file")
+    sys.exit()
 
 line_bot_api = LineBotApi(config['Line']['channel_access_token'])
 handler = WebhookHandler(config['Line']['channel_secret'])
@@ -24,23 +33,28 @@ temp_register_birthday = {}
 
 
 def processing_tasks(line_id):
-    if want_register.get(line_id) or want_re_register.get(line_id):
-        return True
-    else:
-        return False
+    """Check if there are any tasks' user is processing.
+
+    :param str line_id: Line id of the user
+    :rtype: bool
+    """
+    return bool(want_register.get(line_id) or want_re_register.get(line_id))
 
 
 app = Flask(__name__)
+log = create_logger(app)
 
 
 @app.route("/callback", methods=['POST'])
 def callback():
+    """Callback function for line webhook."""
+
     # get X-Line-Signature header value
     signature = request.headers['X-Line-Signature']
 
     # get request body as text
     body = request.get_data(as_text=True)
-    app.logger.info("Request body: " + body)
+    log.info("Request body: %s", body)
 
     # handle webhook body
     try:
@@ -54,12 +68,16 @@ def callback():
 
 @handler.add(FollowEvent)
 def handle_join(event):
+    """Handle when user add bot as friend."""
+
     if event.type == "follow":
         print("Someone just added you as friend")
 
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+    """Handle message event."""
+
     line_id = event.source.user_id
     message_received = event.message.text
     reply_token = event.reply_token
@@ -68,12 +86,12 @@ def handle_message(event):
     if want_register.get(line_id):
         if message_received == "離開":
             want_register.pop(line_id)
+            reply_message = "已離開綁定程序"
+            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
             try:
-                reply_message = "已離開綁定程序"
-                line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
                 temp_register_id.pop(line_id)
             except KeyError:
-                return 0
+                pass
         elif line_id not in temp_register_id:  # 如果沒有輸入過身分證字號
             if utils.is_id_legal(message_received):  # 如果身份證字號符合規格
                 temp_register_id[line_id] = message_received
@@ -87,7 +105,8 @@ def handle_message(event):
                 if message_received == "確定":
                     want_register.pop(line_id)
                     want_re_register.pop(line_id)
-                    old_lind_id = database.get_patient_info_by_id(temp_register_id.get(line_id)).get('line_id')
+                    old_lind_id = database.get_patient_info_by_id(
+                        temp_register_id.get(line_id)).get('line_id')
                     database.update_patient_line_id(temp_register_id.get(line_id), line_id)
                     database.update_line_registry(old_lind_id, False)
                     database.update_line_registry(line_id, True)
@@ -109,10 +128,10 @@ def handle_message(event):
                     line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
             elif utils.is_date(message_received):  # 如果生日符合規格
                 temp_register_birthday[line_id] = datetime.strptime(message_received, '%Y/%m/%d')
-                if database.get_patient_info_by_id(temp_register_id.get(line_id)) == "Error":  # 如果無法用ID查到該病人
+                if database.get_patient_info_by_id(
+                        temp_register_id.get(line_id)) == "Error":  # 如果無法用ID查到該病人
                     print(
-                        "Line ID: {}\nDebug: Can't find patient's ID in patient_base table while binding Line account".format(
-                            line_id))
+                        f"Line ID: {line_id}\nDebug: Can't find patient's ID in patient_base table while binding Line account")
                     want_register.pop(line_id)
                     temp_register_id.pop(line_id)
                     temp_register_birthday.pop(line_id)
@@ -130,7 +149,8 @@ def handle_message(event):
                             temp_register_id.pop(line_id)
                             temp_register_birthday.pop(line_id)
                             reply_message = "成功綁定"
-                            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+                            line_bot_api.reply_message(reply_token,
+                                                       TextSendMessage(text=reply_message))
                         elif database.get_patient_info_by_id(temp_register_id.get(line_id)).get(
                                 'line_id') is not None:  # 如果病人已在其他裝置上完成LINE綁定, 詢問是否重新綁定
                             want_re_register[line_id] = True
@@ -194,7 +214,8 @@ def handle_message(event):
     if message_received == "綁定Line帳號" and not processing_tasks(line_id):
         if database.is_line_registered(line_id) == "Error":  # 如果病人在line_registry資料表中沒有資料
             database.create_line_registry(line_id, False)
-            print("Line ID: {}\nDebug: Can't find user in line_registry table, create one by default".format(line_id))
+            print(
+                f"Line ID: {line_id}\nDebug: Can't find user in line_registry table, create one by default")
             want_register[line_id] = True
             reply_message = "請輸入您的身分證字號"
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
@@ -209,7 +230,8 @@ def handle_message(event):
     if message_received == "重新綁定Line帳號" and not processing_tasks(line_id):
         if database.is_line_registered(line_id) == "Error":  # 如果病人在line_registry資料表中沒有資料
             database.create_line_registry(line_id, False)
-            print("Line ID: {}\nDebug: Can't find user in line_registry table, create one by default".format(line_id))
+            print(
+                f"Line ID: {line_id}\nDebug: Can't find user in line_registry table, create one by default")
             want_re_register[line_id] = True
             template_message = TemplateSendMessage(
                 alt_text="尚未綁定Line帳號，是否進行初次綁定帳號",
@@ -309,14 +331,14 @@ def handle_message(event):
         line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
     if message_received == "獲取個人資料(測試用)" and not processing_tasks(line_id):
-        if database.is_line_registered(line_id) == "Error" or not database.is_line_registered(line_id):
-            print("Line ID: {}\nDebug: Can't find user in line_registry table".format(line_id))
+        if database.is_line_registered(line_id) == "Error" or not database.is_line_registered(
+                line_id):
+            print(f"Line ID: {line_id}\nDebug: Can't find user in line_registry table")
             reply_message = "您尚未綁定Line帳號\n請先至會員服務進行初次綁定"
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
         elif database.is_line_registered(line_id):
             info = database.get_patient_info_by_line_id(line_id)
-            reply_message = "姓名: {}\n身分證字號: {}\n生日: {}\n性別: {}".format(
-                info.get('name'), info.get('id'), info.get('birthday'), info.get('sex'))
+            reply_message = f"(姓名: {info.get('name')}\n身分證字號: {info.get('id')}\n生日: {info.get('birthday')}\n性別: {info.get('sex')}"
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
 
