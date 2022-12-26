@@ -1,9 +1,7 @@
 """This is the main file of the program."""
 
-import sys
 from datetime import datetime
 
-import yaml
 from flask import Flask, request, abort
 from flask.logging import create_logger
 from linebot import LineBotApi, WebhookHandler
@@ -11,20 +9,13 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TemplateSendMessage, CarouselTemplate, \
     CarouselColumn, \
     MessageAction, TextSendMessage, FollowEvent, ConfirmTemplate
-from yaml.loader import SafeLoader
 
 import database
 import utilities as utils
 
-try:
-    with open('config.yml', 'r', encoding="utf8") as f:
-        config = yaml.load(f, Loader=SafeLoader)
-except FileNotFoundError:
-    print("Config file not found, please create a config.yml file")
-    sys.exit()
-
-line_bot_api = LineBotApi(config['Line']['channel_access_token'])
-handler = WebhookHandler(config['Line']['channel_secret'])
+config = utils.read_config()
+line_bot_api = LineBotApi(config.get('line_channel_access_token'))
+handler = WebhookHandler(config.get('line_channel_secret'))
 
 want_register = {}
 want_re_register = {}

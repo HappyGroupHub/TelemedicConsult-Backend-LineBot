@@ -1,28 +1,16 @@
 """This python file will handle all the database things."""
 
-import sys
-
 import mysql.connector as database
-import yaml
-from yaml import SafeLoader
 
-try:
-    with open('config.yml', 'r', encoding="utf8") as f:
-        config = yaml.load(f, Loader=SafeLoader)
-except FileNotFoundError:
-    print("Config file not found, please create a config.yml file")
-    sys.exit()
+import utilities as utils
 
-hostname = config['Database']['hostname']
-db_name = config['Database']['db_name']
-username = config['Database']['username']
-password = config['Database']['password']
+config = utils.read_config()
 
 connection = database.connect(
-    user=username,
-    password=password,
-    host=hostname,
-    database=db_name
+    user=config.get('db_username'),
+    password=config.get('db_password'),
+    host=config.get('db_hostname'),
+    database=config.get('db_name')
 )
 
 cursor = connection.cursor()
