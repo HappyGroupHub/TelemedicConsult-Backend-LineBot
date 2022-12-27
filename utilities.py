@@ -34,7 +34,7 @@ def read_config():
                 "Line:\n  channel_access_token: ''\n  channel_secret: ''\n"
                 "Database:\n  hostname: ''\n  db_name: ''\n  username: ''\n  password: ''\n")
         sys.exit()
-    except KeyError:
+    except (KeyError, TypeError):
         print("An error occurred while reading config.yml, please check if the file is corrected filled.\n"
               "If the problem can't be solved, consider delete config.yml and restart the program.\n")
         sys.exit()
