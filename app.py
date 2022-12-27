@@ -333,5 +333,14 @@ def handle_message(event):
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
 
+@app.route("/internal-webhook-for-telemedic-consult-web-and-linebot", methods=['POST'])
+def webhook():
+    if request.method == 'POST':
+        print(request.json)
+        return 'OK', 200
+    else:
+        abort(400)
+
+
 if __name__ == "__main__":
     app.run()
