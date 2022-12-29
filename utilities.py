@@ -19,12 +19,13 @@ def read_config():
         with open('config.yml', 'r', encoding="utf8") as f:
             data = yaml.load(f, Loader=SafeLoader)
             config = {
+                'line_channel_secret': data['Line']['channel_secret'],
+                'line_channel_access_token': data['Line']['channel_access_token'],
                 'db_hostname': data['Database']['hostname'],
                 'db_name': data['Database']['db_name'],
                 'db_username': data['Database']['username'],
                 'db_password': data['Database']['password'],
-                'line_channel_secret': data['Line']['channel_secret'],
-                'line_channel_access_token': data['Line']['channel_access_token']
+                'webhook_base_extension': data['Webhook_with_web']['base_extension']
             }
             return config
     except FileNotFoundError:
@@ -32,7 +33,8 @@ def read_config():
         with open('config.yml', 'w', encoding="utf8") as f:
             f.write(
                 "Line:\n  channel_access_token: ''\n  channel_secret: ''\n"
-                "Database:\n  hostname: ''\n  db_name: ''\n  username: ''\n  password: ''\n")
+                "Database:\n  hostname: ''\n  db_name: ''\n  username: ''\n  password: ''\n"
+                "Webhook_with_web:\n  base_extension: ''")
         sys.exit()
     except (KeyError, TypeError):
         print("An error occurred while reading config.yml, please check if the file is corrected filled.\n"

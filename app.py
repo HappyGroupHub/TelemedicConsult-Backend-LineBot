@@ -1,5 +1,5 @@
 """This is the main file of the program."""
-
+import json
 from datetime import datetime
 
 from flask import Flask, request, abort
@@ -333,10 +333,15 @@ def handle_message(event):
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
 
-@app.route("/internal-webhook-for-telemedic-consult-web-and-linebot", methods=['POST'])
+@app.route(config.get('webhook_base_extension'), methods=['POST'])
 def webhook():
-    if request.method == 'POST':
-        print(request.json)
+    body = request.get_data(as_text=True)
+    json_data = json.loads(body)
+    if json_data.get("type") == "reservation":
+        patient_id = json_data.get("patient_id")
+        line_id = database.get_patient_info_by_id(patient_id).get("line_id")
+        push_message = f"您的掛號已經完成!"
+        line_bot_api.push_message(line_id, TextSendMessage(text=push_message))
         return 'OK', 200
     else:
         abort(400)
