@@ -337,10 +337,13 @@ def handle_message(event):
 def webhook():
     body = request.get_data(as_text=True)
     json_data = json.loads(body)
-    if json_data.get("type") == "reservation":
-        patient_id = json_data.get("patient_id")
-        line_id = database.get_patient_info_by_id(patient_id).get("line_id")
-        push_message = f"您的掛號已經完成!"
+    if json_data.get("eventType") == "reservation":
+        line_id = json_data.get("lineID")
+        push_message = f"{json_data.get('data').get('patientName')}您好!\n" \
+                       f"您已成功預約{json_data.get('data').get('appointment').get('doctorName')}醫師於" \
+                       f"{json_data.get('data').get('appointment').get('date')} " \
+                       f"{json_data.get('data').get('appointment').get('timePeriod')}的線上門診\n" \
+                       f"請務必準時前往就醫，謝謝!"
         line_bot_api.push_message(line_id, TextSendMessage(text=push_message))
         return 'OK', 200
     else:
