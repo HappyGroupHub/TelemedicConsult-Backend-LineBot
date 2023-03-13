@@ -16,6 +16,17 @@ connection = database.connect(
 cursor = connection.cursor()
 
 
+def register_patient(name, id, sex, birthday, blood_type, ic_card_number, phone_number, address,
+                     height, weight,
+                     ice_contact, ice_relation, ice_phone):
+    try:
+        statement = f"INSERT INTO patient_base (name, id, sex, birthday, blood_type, ic_card_number, phone_number, address, height, weight, ice_contact, ice_relation, ice_phone) VALUE ('{name}', '{id}', '{sex}', '{birthday}', '{blood_type}', '{ic_card_number}', '{phone_number}', '{address}', '{height}', '{weight}', '{ice_contact}', '{ice_relation}', '{ice_phone}')"
+        cursor.execute(statement)
+        connection.commit()
+    except database.errors as error:
+        print(f"Error creating patients to database: {error}")
+
+
 def get_patient_info_by_id(patient_id):
     """Get patient info by patient id.
 
@@ -133,7 +144,7 @@ def create_line_registry(line_id, is_registered):
     :param bool is_registered: to registered or not (should be false by default)
     """
     try:
-        statement = f"INSERT INTO line_registry(line_id, is_registered) VALUE ('{line_id}', {is_registered})"
+        statement = f"INSERT INTO line_registry (line_id, is_registered) VALUE ('{line_id}', {is_registered})"
         cursor.execute(statement)
         connection.commit()
     except database.errors as error:
