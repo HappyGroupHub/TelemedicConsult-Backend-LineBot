@@ -31,5 +31,15 @@ def register_patient():
     return jsonify(response)
 
 
+@app.route('/get_patient_info_by_id', methods=['GET', 'POST'])
+def get_patient_info_by_id():
+    response = {'status': 'success'}
+    post_data = request.get_json()
+    patient_id = post_data['id']
+    patient_info = database.get_patient_info_by_id(patient_id)
+    response.update(patient_info)
+    return jsonify(response)
+
+
 if __name__ == '__main__':
     app.run()
