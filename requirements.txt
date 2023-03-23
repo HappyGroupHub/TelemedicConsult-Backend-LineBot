@@ -1,0 +1,4 @@
+Flask~=2.2.2
+mysql-connector-python~=8.0.31
+PyYAML~=6.0
+line-bot-sdk~=2.3.0
