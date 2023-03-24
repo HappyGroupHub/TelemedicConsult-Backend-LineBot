@@ -4,7 +4,7 @@
 
 ## 本專案提供Line Bot給使用者(病人)通訊看診及個案管理
 
-![image](readme_imgs/line_register.png)
+<img width="450" src="./readme_imgs/line_register.png">
 
 ### 專案簡述
 
