@@ -41,5 +41,19 @@ def get_patient_info_by_id():
     return jsonify(response)
 
 
+@app.route('/if_patient_registered_line', methods=['GET', 'POST'])
+def if_patient_registered_line():
+    response = {'status': 'success'}
+    post_data = request.get_json()
+    patient_id = post_data['id']
+    patient_info = database.get_patient_info_by_id(patient_id)
+    print(patient_info)
+    if patient_info['line_id'] is None:
+        response['registered'] = False
+    else:
+        response['registered'] = True
+    return jsonify(response)
+
+
 if __name__ == '__main__':
     app.run()
