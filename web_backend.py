@@ -37,6 +37,7 @@ def get_patient_info_by_id():
     post_data = request.get_json()
     patient_id = post_data['id']
     patient_info = database.get_patient_info_by_id(patient_id)
+    patient_info['birthday'] = patient_info['birthday'].strftime("%Y-%m-%d")
     response.update(patient_info)
     return jsonify(response)
 
