@@ -113,6 +113,27 @@ def update_patient_line_id(patient_id, line_id):
         print(f"Error retrieving entry from database: {error}")
 
 
+def update_patient_info_by_id(patient_id, phone_number, address, height, weight, ice_contact,
+                              ice_relation, ice_phone):
+    """Update patient info.
+
+    :param phone_number: Patient phone number
+    :param address: Patient address
+    :param height: Patient height
+    :param weight: Patient weight
+    :param ice_contact: Patient ICE contact
+    :param ice_relation: Patient ICE relation
+    :param ice_phone: Patient ICE phone number
+    :param str patient_id: Registered patient id
+    """
+    try:
+        statement = f"UPDATE patient_base SET phone_number = '{phone_number}', address = '{address}', height = '{height}', weight = '{weight}', ice_contact = '{ice_contact}', ice_relation = '{ice_relation}', ice_phone = '{ice_phone}' WHERE id = '{patient_id}'"
+        cursor.execute(statement)
+        connection.commit()
+    except database.errors as error:
+        print(f"Error retrieving entry from database: {error}")
+
+
 def is_line_registered(line_id):
     """Check if line id is registered.
 

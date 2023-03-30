@@ -47,11 +47,28 @@ def if_patient_registered_line():
     post_data = request.get_json()
     patient_id = post_data['id']
     patient_info = database.get_patient_info_by_id(patient_id)
-    print(patient_info)
     if patient_info['line_id'] is None:
         response['registered'] = False
     else:
         response['registered'] = True
+    return jsonify(response)
+
+
+@app.route('/update_patient_info_by_id', methods=['GET', 'POST'])
+def update_patient_info_by_id():
+    response = {'status': 'success'}
+    post_data = request.get_json()
+    patient_id = post_data['id']
+    phone_number = post_data['phone_number']
+    address = post_data['address']
+    height = post_data['height']
+    weight = post_data['weight']
+    ice_contact = post_data['ice_contact']
+    ice_relation = post_data['ice_relation']
+    ice_phone = post_data['ice_phone']
+    database.update_patient_info_by_id(patient_id, phone_number, address, height, weight,
+                                       ice_contact,
+                                       ice_relation, ice_phone)
     return jsonify(response)
 
 
