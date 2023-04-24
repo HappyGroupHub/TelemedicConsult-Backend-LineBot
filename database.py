@@ -34,6 +34,7 @@ def get_patient_info_by_id(patient_id):
     :rtype: dict
     """
     try:
+        connection.autocommit = True
         statement = f"SELECT * FROM patient_base WHERE id = '{patient_id}'"
         cursor.execute(statement)
         for result in cursor:
@@ -70,6 +71,7 @@ def get_patient_info_by_line_id(line_id):
     :rtype: dict
     """
     try:
+        connection.autocommit = True
         statement = f"SELECT * FROM patient_base WHERE line_id = '{line_id}'"
         cursor.execute(statement)
         for result in cursor:
@@ -141,6 +143,7 @@ def is_line_registered(line_id):
     :rtype: bool
     """
     try:
+        connection.autocommit = True
         statement = f"SELECT is_registered FROM line_registry WHERE line_id = '{line_id}'"
         cursor.execute(statement)
         for result in cursor:
