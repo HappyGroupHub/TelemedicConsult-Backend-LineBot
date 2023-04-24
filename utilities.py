@@ -21,6 +21,7 @@ def read_config():
             config = {
                 'line_channel_secret': data['Line']['channel_secret'],
                 'line_channel_access_token': data['Line']['channel_access_token'],
+                'line_port': data['Line']['port'],
                 'db_hostname': data['Database']['hostname'],
                 'db_name': data['Database']['db_name'],
                 'db_username': data['Database']['username'],
@@ -32,7 +33,7 @@ def read_config():
         print("Config file not found, create one by default.\nPlease finish filling config.yml")
         with open('config.yml', 'w', encoding="utf8") as f:
             f.write(
-                "Line:\n  channel_access_token: ''\n  channel_secret: ''\n"
+                "Line:\n  channel_access_token: ''\n  channel_secret: ''\n  port: \n"
                 "Database:\n  hostname: ''\n  db_name: ''\n  username: ''\n  password: ''\n"
                 "Webhook_with_web:\n  base_extension: ''")
         sys.exit()
