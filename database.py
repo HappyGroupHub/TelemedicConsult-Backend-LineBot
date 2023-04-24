@@ -187,3 +187,26 @@ def update_line_registry(line_id, is_registered):
         connection.commit()
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
+
+
+def check_if_time_have_clinic(date, time_period):
+    """Check if the given time period have clinic.
+
+    :param date: Given date
+    :param time_period: Given time period
+    :rtype: dict
+    """
+    try:
+        connection.autocommit = True
+        statement = f"SELECT clinic_id FROM clinic_base WHERE date = '{date}' AND time_period = '{time_period}'"
+        cursor.execute(statement)
+        for result in cursor:
+            clinic_id = result
+            return {'have_clinic': True, 'clinic_id': list(clinic_id)[0]}
+        return {'have_clinic': False, 'clinic_id': None}
+    except (TypeError, UnboundLocalError):
+        print("Error retrieving entry from database, no matching results")
+        return "Error"
+    except database.errors as error:
+        print(f"Error retrieving entry from database: {error}")
+        return None
