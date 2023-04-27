@@ -295,6 +295,28 @@ def update_clinic_status(clinic_id, **status_dict):
             print(f"Error retrieving entry from database: {error}")
 
 
+def check_can_patient_make_appointment(patient_id, clinic_id):
+    """Check if the patient can make appointment.
+
+    :param str patient_id: Registered patient id
+    :param str clinic_id: Registered clinic id
+    :rtype: bool
+    """
+    try:
+        connection.autocommit = True
+        statement = f"SELECT * FROM appointment_base WHERE patient_id = '{patient_id}' AND clinic_id = '{clinic_id}'"
+        cursor.execute(statement)
+        for result in cursor:
+            return False
+        return True
+    except (TypeError, UnboundLocalError):
+        print("Error retrieving entry from database, no matching results")
+        return "Error"
+    except database.errors as error:
+        print(f"Error retrieving entry from database: {error}")
+        return None
+
+
 def make_appointment(clinic_id, patient_id):
     """Make appointment.
 

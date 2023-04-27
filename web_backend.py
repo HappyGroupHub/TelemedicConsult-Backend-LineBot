@@ -106,8 +106,11 @@ def make_appointment():
     post_data = request.get_json()
     patient_id = post_data['patient_id']
     clinic_id = post_data['clinic_id']
-    appointment_num = database.make_appointment(clinic_id, patient_id)
-    response['appointment_num'] = appointment_num
+    if database.check_can_patient_make_appointment(patient_id, clinic_id):
+        appointment_num = database.make_appointment(clinic_id, patient_id)
+        response['appointment_num'] = appointment_num
+    else:
+        response['appointment_num'] = 0
     return jsonify(response)
 
 
