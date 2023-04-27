@@ -212,6 +212,39 @@ def check_if_time_have_clinic(date, time_period):
         return None
 
 
+def get_clinic_info(clinic_id):
+    """Get clinic info by given clinic id.
+
+    :param str clinic_id: Given clinic id
+    :rtype: dict
+    """
+    try:
+        connection.autocommit = True
+        statement = f"SELECT * FROM clinic_base WHERE clinic_id = '{clinic_id}'"
+        cursor.execute(statement)
+        for result in cursor:
+            clinic_info = result
+        return {
+            'clinic_id': list(clinic_info)[0],
+            'doc_id': list(clinic_info)[1],
+            'doc_name': list(clinic_info)[2],
+            'date': list(clinic_info)[3],
+            'time_period': list(clinic_info)[4],
+            'start_time': list(clinic_info)[5],
+            'end_time': list(clinic_info)[6],
+            'link': list(clinic_info)[7],
+            'total_appointment': list(clinic_info)[8],
+            'biggest_appointment_num': list(clinic_info)[9],
+            'progress': list(clinic_info)[10]
+        }
+    except (TypeError, UnboundLocalError):
+        print("Error retrieving entry from database, no matching results")
+        return "Error"
+    except database.errors as error:
+        print(f"Error retrieving entry from database: {error}")
+        return None
+
+
 def update_clinic_status(clinic_id, **status_dict):
     """Update clinic status.
 
@@ -246,6 +279,13 @@ def update_clinic_status(clinic_id, **status_dict):
             connection.commit()
         except database.errors as error:
             print(f"Error retrieving entry from database: {error}")
+    if status_dict['biggest_appointment_num'] is not None:
+        try:
+            statement = f"UPDATE clinic_base SET biggest_appointment_num = '{status_dict['biggest_appointment_num']}' WHERE clinic_id = '{clinic_id}'"
+            cursor.execute(statement)
+            connection.commit()
+        except database.errors as error:
+            print(f"Error retrieving entry from database: {error}")
     if status_dict['progress'] is not None:
         try:
             statement = f"UPDATE clinic_base SET progress = '{status_dict['progress']}' WHERE clinic_id = '{clinic_id}'"
@@ -253,27 +293,6 @@ def update_clinic_status(clinic_id, **status_dict):
             connection.commit()
         except database.errors as error:
             print(f"Error retrieving entry from database: {error}")
-
-
-def get_clinic_total_appointment(clinic_id):
-    """Get clinic total appointment.
-
-    :param str clinic_id: Registered clinic id
-    :rtype: int
-    """
-    try:
-        connection.autocommit = True
-        statement = f"SELECT total_appointment FROM clinic_base WHERE clinic_id = '{clinic_id}'"
-        cursor.execute(statement)
-        for result in cursor:
-            total_appointment = result
-        return list(total_appointment)[0]
-    except (TypeError, UnboundLocalError):
-        print("Error retrieving entry from database, no matching results")
-        return "Error"
-    except database.errors as error:
-        print(f"Error retrieving entry from database: {error}")
-        return None
 
 
 def make_appointment(clinic_id, patient_id):
@@ -284,14 +303,38 @@ def make_appointment(clinic_id, patient_id):
     :rtype: int
     """
     patient_name = get_patient_info_by_id(patient_id)['name']
-    appointment_num = get_clinic_total_appointment(clinic_id) + 1
-    update_clinic_status(clinic_id,
-                         **{'start_time': None, 'end_time': None, 'link': None, 'progress': None,
-                            'total_appointment': appointment_num})
+    clinic_info = get_clinic_info(clinic_id)
+    appointment_num = clinic_info['biggest_appointment_num'] + 1
+    total_appointment = clinic_info['total_appointment'] + 1
     try:
         statement = f"INSERT INTO appointment_base (clinic_id, patient_id, patient_name, appointment_num) VALUE ('{clinic_id}', '{patient_id}', '{patient_name}', {appointment_num})"
         cursor.execute(statement)
         connection.commit()
+        update_clinic_status(clinic_id,
+                             **{'start_time': None, 'end_time': None, 'link': None,
+                                'progress': None,
+                                'total_appointment': total_appointment,
+                                'biggest_appointment_num': appointment_num})
         return appointment_num
+    except database.errors as error:
+        print(f"Error retrieving entry from database: {error}")
+
+
+def cancel_appointment(patient_id, clinic_id):
+    """Cancel appointment.
+
+    :param str patient_id: Registered patient id
+    :param str clinic_id: Registered clinic id
+    """
+    clinic_info = get_clinic_info(clinic_id)
+    total_appointment = clinic_info['total_appointment'] - 1
+    try:
+        statement = f"DELETE FROM appointment_base WHERE patient_id = '{patient_id}' AND clinic_id = '{clinic_id}'"
+        cursor.execute(statement)
+        connection.commit()
+        update_clinic_status(clinic_id,
+                             **{'start_time': None, 'end_time': None, 'link': None,
+                                'progress': None, 'biggest_appointment_num': None,
+                                'total_appointment': total_appointment})
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
