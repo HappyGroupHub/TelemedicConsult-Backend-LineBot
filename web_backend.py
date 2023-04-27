@@ -84,5 +84,20 @@ def check_if_time_have_clinic():
     return jsonify(response)
 
 
+@app.route('/update_clinic_status', methods=['GET', 'POST'])
+def update_clinic_status():
+    response = {'status': 'success'}
+    post_data = request.get_json()
+    clinic_id = post_data['clinic_id']
+    status_dict = post_data['status_dict']
+    database.update_clinic_status(clinic_id, **{
+        'start_time': status_dict.get('start_time', None),
+        'end_time': status_dict.get('end_time', None),
+        'link': status_dict.get('link', None),
+        'progress': status_dict.get('progress', None)
+    })
+    return jsonify(response)
+
+
 if __name__ == '__main__':
     app.run()

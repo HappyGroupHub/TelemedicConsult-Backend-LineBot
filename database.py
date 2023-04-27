@@ -210,3 +210,39 @@ def check_if_time_have_clinic(date, time_period):
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
         return None
+
+
+def update_clinic_status(clinic_id, **status_dict):
+    """Update clinic status.
+
+    :param str clinic_id: Registered clinic id
+    :param dict status_dict: Clinic status dictionary, including start_time, end_time, link and progress
+    """
+    if status_dict['start_time'] is not None:
+        try:
+            statement = f"UPDATE clinic_base SET start_time = '{status_dict['start_time']}' WHERE clinic_id = '{clinic_id}'"
+            cursor.execute(statement)
+            connection.commit()
+        except database.errors as error:
+            print(f"Error retrieving entry from database: {error}")
+    if status_dict['end_time'] is not None:
+        try:
+            statement = f"UPDATE clinic_base SET end_time = '{status_dict['end_time']}' WHERE clinic_id = '{clinic_id}'"
+            cursor.execute(statement)
+            connection.commit()
+        except database.errors as error:
+            print(f"Error retrieving entry from database: {error}")
+    if status_dict['link'] is not None:
+        try:
+            statement = f"UPDATE clinic_base SET link = '{status_dict['link']}' WHERE clinic_id = '{clinic_id}'"
+            cursor.execute(statement)
+            connection.commit()
+        except database.errors as error:
+            print(f"Error retrieving entry from database: {error}")
+    if status_dict['progress'] is not None:
+        try:
+            statement = f"UPDATE clinic_base SET progress = '{status_dict['progress']}' WHERE clinic_id = '{clinic_id}'"
+            cursor.execute(statement)
+            connection.commit()
+        except database.errors as error:
+            print(f"Error retrieving entry from database: {error}")
