@@ -94,8 +94,20 @@ def update_clinic_status():
         'start_time': status_dict.get('start_time', None),
         'end_time': status_dict.get('end_time', None),
         'link': status_dict.get('link', None),
+        'total_appointment': status_dict.get('total_appointment', None),
         'progress': status_dict.get('progress', None)
     })
+    return jsonify(response)
+
+
+@app.route('/make_appointment', methods=['GET', 'POST'])
+def make_appointment():
+    response = {'status': 'success'}
+    post_data = request.get_json()
+    patient_id = post_data['patient_id']
+    clinic_id = post_data['clinic_id']
+    appointment_num = database.make_appointment(clinic_id, patient_id)
+    response['appointment_num'] = appointment_num
     return jsonify(response)
 
 
