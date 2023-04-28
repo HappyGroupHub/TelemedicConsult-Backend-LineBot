@@ -333,16 +333,17 @@ def handle_message(event):
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
 
-@app.route(config.get('webhook_base_extension'), methods=['POST'])
-def webhook():
-    body = request.get_data(as_text=True)
-    json_data = json.loads(body)
-    if json_data.get("eventType") == "reservation":
-        line_id = json_data.get("lineID")
-        push_message = f"{json_data.get('data').get('patientName')}您好!\n" \
-                       f"您已成功預約{json_data.get('data').get('appointment').get('doctorName')}醫師於" \
-                       f"{json_data.get('data').get('appointment').get('date')} " \
-                       f"{json_data.get('data').get('appointment').get('timePeriod')}的線上門診\n" \
+@app.route('/from_backend', methods=['POST'])
+def from_backend():
+    post_data = request.get_json()
+    patient_name = post_data.get('patient_name')
+    line_id = post_data.get('line_id')
+    if post_data.get('action') == 'make_appointment':
+        push_message = f"{patient_name}您好!\n" \
+                       f"您已成功預約{post_data['action_info']['doc_name']}醫師於" \
+                       f"{post_data['action_info']['date']} " \
+                       f"{post_data['action_info']['time_period']}的線上門診\n" \
+                       f"你的預約號碼為 {post_data['action_info']['appointment_num']}\n" \
                        f"請務必準時前往就醫，謝謝!"
         line_bot_api.push_message(line_id, TextSendMessage(text=push_message))
         return 'OK', 200

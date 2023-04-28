@@ -26,7 +26,6 @@ def read_config():
                 'db_name': data['Database']['db_name'],
                 'db_username': data['Database']['username'],
                 'db_password': data['Database']['password'],
-                'webhook_base_extension': data['Webhook_with_web']['base_extension']
             }
             return config
     except FileNotFoundError:
@@ -34,12 +33,12 @@ def read_config():
         with open('config.yml', 'w', encoding="utf8") as f:
             f.write(
                 "Line:\n  channel_access_token: ''\n  channel_secret: ''\n  port: \n"
-                "Database:\n  hostname: ''\n  db_name: ''\n  username: ''\n  password: ''\n"
-                "Webhook_with_web:\n  base_extension: ''")
+                "Database:\n  hostname: ''\n  db_name: ''\n  username: ''\n  password: ''")
         sys.exit()
     except (KeyError, TypeError):
-        print("An error occurred while reading config.yml, please check if the file is corrected filled.\n"
-              "If the problem can't be solved, consider delete config.yml and restart the program.\n")
+        print(
+            "An error occurred while reading config.yml, please check if the file is corrected filled.\n"
+            "If the problem can't be solved, consider delete config.yml and restart the program.\n")
         sys.exit()
 
 

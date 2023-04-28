@@ -1,11 +1,15 @@
+import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 import database
+import utilities as utils
 
 app = Flask(__name__)
 
 CORS(app, resources={r"/*": {"origins": "*"}})
+
+linebot_port = utils.read_config()['line_port']
 
 
 @app.route('/register_patient', methods=['GET', 'POST'])
@@ -119,6 +123,12 @@ def make_appointment():
     clinic_id = post_data['clinic_id']
     if database.check_can_patient_make_appointment(patient_id, clinic_id):
         appointment_num = database.make_appointment(clinic_id, patient_id)
+        clinic_info = database.get_clinic_info(clinic_id)
+        action_info = {'doc_name': clinic_info['doc_name'],
+                       'date': clinic_info['date'].strftime("%Y-%m-%d"),
+                       'time_period': clinic_info['time_period'],
+                       'appointment_num': appointment_num}
+        to_line(patient_id, 'make_appointment', **action_info)
         response['appointment_num'] = appointment_num
     else:
         response['appointment_num'] = 0
@@ -133,6 +143,15 @@ def cancel_appointment():
     clinic_id = post_data['clinic_id']
     database.cancel_appointment(patient_id, clinic_id)
     return jsonify(response)
+
+
+def to_line(patient_id, action, **action_info):
+    patient_info = database.get_patient_info_by_id(patient_id)
+    patient_name = patient_info['name']
+    line_id = patient_info['line_id']
+    post_data = {'patient_id': patient_id, 'patient_name': patient_name, 'line_id': line_id,
+                 'action': action, 'action_info': action_info}
+    requests.post(f'http://127.0.0.1:{linebot_port}/from_backend', json=post_data)
 
 
 if __name__ == '__main__':
