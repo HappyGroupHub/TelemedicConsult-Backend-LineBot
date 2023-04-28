@@ -90,6 +90,7 @@ def get_clinic_info():
     post_data = request.get_json()
     clinic_id = post_data['clinic_id']
     clinic_info = database.get_clinic_info(clinic_id)
+    clinic_info['date'] = clinic_info['date'].strftime("%Y-%m-%d")
     response.update(clinic_info)
     return jsonify(response)
 
