@@ -151,10 +151,10 @@ def is_line_registered(line_id):
         return list(is_registered)[0]
     except (TypeError, UnboundLocalError):
         print("Error retrieving entry from database, no matching results")
-        return "Error"
+        return False
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
-        return None
+        return False
 
 
 def create_line_registry(line_id, is_registered):
@@ -206,10 +206,10 @@ def check_if_time_have_clinic(date, time_period):
         return {'have_clinic': False, 'clinic_id': None}
     except (TypeError, UnboundLocalError):
         print("Error retrieving entry from database, no matching results")
-        return "Error"
+        return {'have_clinic': False, 'clinic_id': None}
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
-        return None
+        return {'have_clinic': False, 'clinic_id': None}
 
 
 def get_clinic_info(clinic_id):
@@ -360,3 +360,34 @@ def cancel_appointment(patient_id, clinic_id):
                                 'total_appointment': total_appointment})
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
+
+
+def get_patient_appointment_with_clinic_id(patient_id, clinic_id):
+    """Check patient appointment with clinic id.
+
+    :param str patient_id: Registered patient id
+    :param str clinic_id: Registered clinic id
+    :rtype: dict
+    """
+    try:
+        connection.autocommit = True
+        statement = f"SELECT * FROM appointment_base WHERE patient_id = '{patient_id}' AND clinic_id = '{clinic_id}'"
+        cursor.execute(statement)
+        for result in cursor:
+            appointment_info = result
+        return {
+            'have_appointment': True,
+            'order_id': appointment_info[0],
+            'patient_id': appointment_info[1],
+            'patient_name': appointment_info[2],
+            'clinic_id': appointment_info[3],
+            'appointment_num': appointment_info[4],
+            'start_time': appointment_info[5],
+            'end_time': appointment_info[6],
+        }
+    except (TypeError, UnboundLocalError):
+        print("Error retrieving entry from database, no matching results")
+        return {'have_appointment': False}
+    except database.errors as error:
+        print(f"Error retrieving entry from database: {error}")
+        return {'have_appointment': False}
