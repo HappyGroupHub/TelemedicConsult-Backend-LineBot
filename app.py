@@ -286,7 +286,7 @@ def handle_message(event):
             template=CarouselTemplate(
                 columns=[
                     CarouselColumn(
-                        thumbnail_image_url="https://media.discordapp.net/attachments/930101666861187172/1102472580755095582/1.png?width=1450&height=960",
+                        thumbnail_image_url="https://media.discordapp.net/attachments/930101666861187172/1102477945643212820/1.png?width=1450&height=960",
                         title="初次使用請綁定Line",
                         text="若您已經在官網填寫完資料後，需要綁定Line即可使用完整服務",
                         actions=[
@@ -298,7 +298,7 @@ def handle_message(event):
                         ]
                     ),
                     CarouselColumn(
-                        thumbnail_image_url="https://cdn.discordapp.com/attachments/930101666861187172/1102472580952236042/2.png",
+                        thumbnail_image_url="https://media.discordapp.net/attachments/930101666861187172/1102477945848746064/2.png?width=1450&height=960",
                         title='重新綁定Line帳號',
                         text='若您已綁定過Line帳號\n請選擇重新綁定即可轉移帳號至新裝置',
                         actions=[
@@ -319,19 +319,19 @@ def handle_message(event):
             template=CarouselTemplate(
                 columns=[
                     CarouselColumn(
-                        thumbnail_image_url="https://media.discordapp.net/attachments/930101666861187172/1102472581157752912/3.png?width=1450&height=960",
-                        title="掛號",
+                        thumbnail_image_url="https://media.discordapp.net/attachments/930101666861187172/1102477946029084792/3.png?width=1450&height=960",
+                        title="網站掛號",
                         text="您可以在此取得掛號連結，並進行掛號",
                         actions=[
                             MessageAction(
-                                label="點我掛號",
+                                label="點我取得掛號連結",
                                 text="傳送掛號連結"
                             ),
 
                         ]
                     ),
                     CarouselColumn(
-                        thumbnail_image_url="https://media.discordapp.net/attachments/930101666861187172/1102472581413601320/4.png?width=1450&height=960",
+                        thumbnail_image_url="https://media.discordapp.net/attachments/930101666861187172/1102477946247192627/4.png?width=1450&height=960",
                         title='查詢看診進度',
                         text='您可以在此查詢目前看診進度',
                         actions=[
@@ -342,7 +342,7 @@ def handle_message(event):
                         ]
                     ),
                     CarouselColumn(
-                        thumbnail_image_url="https://media.discordapp.net/attachments/930101666861187172/1102472581413601320/4.png?width=1450&height=960",
+                        thumbnail_image_url="https://media.discordapp.net/attachments/930101666861187172/1102477946448531516/5.png?width=1450&height=960",
                         title='過號',
                         text='若您過號了也不用擔心\n您可以點選過號，我們會盡快幫您安排看診',
                         actions=[
