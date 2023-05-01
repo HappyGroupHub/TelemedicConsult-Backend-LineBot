@@ -145,6 +145,17 @@ def cancel_appointment():
     return jsonify(response)
 
 
+@app.route('/get_patient_appointment_with_clinic_id', methods=['GET', 'POST'])
+def get_patient_appointment_with_clinic_id():
+    response = {'status': 'success'}
+    post_data = request.get_json()
+    patient_id = post_data['patient_id']
+    clinic_id = post_data['clinic_id']
+    appointment_info = database.get_patient_appointment_with_clinic_id(patient_id, clinic_id)
+    response.update(appointment_info)
+    return jsonify(response)
+
+
 def to_line(patient_id, action, **action_info):
     patient_info = database.get_patient_info_by_id(patient_id)
     patient_name = patient_info['name']

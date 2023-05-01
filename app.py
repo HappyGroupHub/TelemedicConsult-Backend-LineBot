@@ -1,5 +1,4 @@
 """This is the main file of the program."""
-import json
 from datetime import datetime
 
 from flask import Flask, request, abort
