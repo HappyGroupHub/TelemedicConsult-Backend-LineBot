@@ -356,11 +356,11 @@ def handle_message(event):
         )
         line_bot_api.reply_message(reply_token, carousel_template_message)
 
-    if message_received == "掛號" and not processing_tasks(line_id):
-        reply_message = "開發中..."
+    if message_received == "傳送掛號連結" and not processing_tasks(line_id):
+        reply_message = "http://localhost:5173//reservation.html"
         line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
-    if message_received == "看診進度" and not processing_tasks(line_id):
+    if message_received == "查詢看診進度" and not processing_tasks(line_id):
         reply_message = "開發中..."
         line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
@@ -392,7 +392,6 @@ def from_backend():
         return 'OK', 200
     else:
         abort(400)
-
 
 if __name__ == "__main__":
     app.run(port=config.get('line_port'))
