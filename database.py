@@ -151,13 +151,13 @@ def is_line_registered(line_id):
         return list(is_registered)[0]
     except (TypeError, UnboundLocalError):
         print("Error retrieving entry from database, no matching results")
-        return False
+        return 'Error'
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
-        return False
+        return 'Error'
 
 
-def create_line_registry(line_id, is_registered):
+def create_line_registry(line_id, is_registered=False):
     """Create line registry by given line id.
 
     This function will create a new line registry data by given line id.
@@ -239,7 +239,7 @@ def get_clinic_info(clinic_id):
         }
     except (TypeError, UnboundLocalError):
         print("Error retrieving entry from database, no matching results")
-        return "Error"
+        return None
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
         return None
@@ -311,10 +311,10 @@ def check_can_patient_make_appointment(patient_id, clinic_id):
         return True
     except (TypeError, UnboundLocalError):
         print("Error retrieving entry from database, no matching results")
-        return "Error"
+        return False
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
-        return None
+        return False
 
 
 def make_appointment(clinic_id, patient_id):
@@ -326,6 +326,8 @@ def make_appointment(clinic_id, patient_id):
     """
     patient_name = get_patient_info_by_id(patient_id)['name']
     clinic_info = get_clinic_info(clinic_id)
+    if clinic_info is None:
+        return 0
     appointment_num = clinic_info['biggest_appointment_num'] + 1
     total_appointment = clinic_info['total_appointment'] + 1
     try:

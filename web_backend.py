@@ -41,7 +41,8 @@ def get_patient_info_by_id():
     post_data = request.get_json()
     patient_id = post_data['id']
     patient_info = database.get_patient_info_by_id(patient_id)
-    patient_info['birthday'] = patient_info['birthday'].strftime("%Y-%m-%d")
+    if 'birthday' in patient_info:
+        patient_info['birthday'] = patient_info['birthday'].strftime("%Y-%m-%d")
     response.update(patient_info)
     return jsonify(response)
 
@@ -52,7 +53,7 @@ def if_patient_registered_line():
     post_data = request.get_json()
     patient_id = post_data['id']
     patient_info = database.get_patient_info_by_id(patient_id)
-    if patient_info['line_id'] is None:
+    if patient_info['line_id'] is None or patient_info['line_id'] == '':
         response['registered'] = False
     else:
         response['registered'] = True
@@ -94,7 +95,8 @@ def get_clinic_info():
     post_data = request.get_json()
     clinic_id = post_data['clinic_id']
     clinic_info = database.get_clinic_info(clinic_id)
-    clinic_info['date'] = clinic_info['date'].strftime("%Y-%m-%d")
+    if 'date' in clinic_info:
+        clinic_info['date'] = clinic_info['date'].strftime("%Y-%m-%d")
     response.update(clinic_info)
     return jsonify(response)
 
