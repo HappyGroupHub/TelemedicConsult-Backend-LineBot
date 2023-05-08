@@ -372,18 +372,19 @@ def handle_message(event):
 
     if message_received == "查詢預約" and not processing_tasks(line_id):
         patient_id = database.get_patient_info_by_line_id(line_id)['id']
-        clinic_id = database.get_undone_patient_appointment(patient_id)['clinic_id']
-        clinic_info = database.get_clinic_info(clinic_id)
-        reply_message = f"您的預約資訊如下:\n" \
-                        f"預約日期: {clinic_info['date']}\n" \
-                        f"預約時段: {clinic_info['time_period']}\n" \
-                        f"預約醫生 : {clinic_info['doc_name']}\n"
+        clinic_ids = database.get_undone_patient_appointment(patient_id)
+        reply_message = f"您這個月的預約有 {len(clinic_ids)} 則 \n"
+        for clinic_id in clinic_ids:
+            clinic_info = database.get_clinic_info(clinic_id)
+            reply_message += "---------------------------- \n" \
+                             f"預約日期: {clinic_info['date']}\n" \
+                             f"預約時段: {clinic_info['time_period']}\n" \
+                             f"預約醫生: {clinic_info['doc_name']}\n"
         line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
-    if message_received == "獲取個人資料(測試用)" and not processing_tasks(line_id):
+    if message_received == "查詢看診進度" and not processing_tasks(line_id):
         if database.is_line_registered(line_id) == "Error" or not database.is_line_registered(
                 line_id):
-            print(f"Line ID: {line_id}\nDebug: Can't find user in line_registry table")
             reply_message = "您尚未綁定Line帳號\n請先至會員服務進行初次綁定"
             line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
         elif database.is_line_registered(line_id):

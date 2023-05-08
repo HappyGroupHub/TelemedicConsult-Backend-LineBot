@@ -402,58 +402,14 @@ def get_undone_patient_appointment(patient_id):
     :param str patient_id: Registered patient id
     :rtype: dict
     """
+    clinic_ids = []
     try:
         connection.autocommit = True
-        statement = f"SELECT * FROM appointment_base WHERE patient_id = '{patient_id}' AND end_time is NULL"
+        statement = f"SELECT clinic_id FROM appointment_base WHERE patient_id = '{patient_id}' AND end_time is NULL"
         cursor.execute(statement)
         for result in cursor:
-            appointment_info = result
-        return {
-            'have_appointment': True,
-            'order_id': appointment_info[0],
-            'patient_id': appointment_info[1],
-            'patient_name': appointment_info[2],
-            'clinic_id': appointment_info[3],
-            'appointment_num': appointment_info[4],
-            'start_time': appointment_info[5],
-            'end_time': appointment_info[6],
-        }
-    except (TypeError, UnboundLocalError):
-        print("Error retrieving entry from database, no matching results")
-        return {'have_appointment': False}
-    except database.errors as error:
-        print(f"Error retrieving entry from database: {error}")
-        return {'have_appointment': False}
-
-
-def get_undone_clinic_info(clinic_id):
-    """Check clinic appointment with clinic_id
-
-    Will only return clinics happens in this month and not finished yet
-
-    :param str clinic_id: Registered clinic id
-    :rtype: dict
-    """
-    try:
-        connection.autocommit = True
-        statement = f"SELECT * FROM clinic_base WHERE clinic_id = '{clinic_id}' AND end_time is NULL"
-        cursor.execute(statement)
-        clinic_infos = []
-        for result in cursor:
-            clinic_infos.append({
-                'clinic_id': result[0],
-                'doc_name': result[1],
-                'date': result[2],
-                'time_period': result[3],
-                'start_time': result[4],
-                'end_time': result[5],
-                'link': result[6],
-                'total_appointment': result[7],
-                'biggest_appointment_num': result[8],
-                'progress': result[9],
-            })
-        print()
-        return clinic_infos
+            clinic_ids.append(result[0])
+        return clinic_ids
     except (TypeError, UnboundLocalError):
         print("Error retrieving entry from database, no matching results")
         return []
