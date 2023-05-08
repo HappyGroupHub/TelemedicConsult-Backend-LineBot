@@ -88,7 +88,7 @@ def handle_message(event):
                 reply_message = "請輸入您的出生年月日\n範例:1999/09/09"
                 line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
             elif not utils.is_id_legal(message_received):  # 如果身份證字號不符合規格
-                reply_message = "身分證字號格式有誤，請再輸入一次\n注意：若要退出請輸入『離開』"
+                reply_message = "身分證字號格式有誤，再輸入一次\n注意：若要退出請輸入『離開』"
                 line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
         elif line_id in temp_register_id:  # 如果輸入過身分證字號
             if want_re_register.get(line_id):  # 如果病人已在其他裝置上完成LINE綁定, 詢問是否複寫並重新綁定
@@ -379,7 +379,7 @@ def handle_message(event):
             reply_message += "---------------------------- \n" \
                              f"預約日期: {clinic_info['date']}\n" \
                              f"預約時段: {clinic_info['time_period']}\n" \
-                             f"預約醫生: {clinic_info['doc_name']}\n"
+                             f"預約醫生: {clinic_info['doc_name']}"
         line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
     if message_received == "查詢看診進度" and not processing_tasks(line_id):
@@ -392,9 +392,9 @@ def handle_message(event):
             reply_message = f"目前看診進度 : {ongoing_clinic_info['progress']} 號 \n" \
                             f"您的號碼 : {ongoing_appointment_info['appointment_num']} 號 \n" \
                             "---------------------------- \n" \
-                            f"預約日期: {ongoing_clinic_info['date']}\n" \
-                            f"預約時段: {ongoing_clinic_info['time_period']}\n" \
-                            f"預約醫生: {ongoing_clinic_info['doc_name']}\n"
+                            f"診間日期: {ongoing_clinic_info['date']}\n" \
+                            f"診間時段: {ongoing_clinic_info['time_period']}\n" \
+                            f"診間醫生: {ongoing_clinic_info['doc_name']}"
         line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
 
