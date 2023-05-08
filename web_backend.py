@@ -158,6 +158,17 @@ def get_patient_appointment_with_clinic_id():
     return jsonify(response)
 
 
+@app.route('/doctor_login', methods=['GET', 'POST'])
+def doctor_login():
+    response = {'status': 'success'}
+    post_data = request.get_json()
+    doc_id = post_data['doc_id']
+    password = post_data['password']
+    doc_info = database.doctor_login(doc_id, password)
+    response.update(doc_info)
+    return jsonify(response)
+
+
 def to_line(patient_id, action, **action_info):
     patient_info = database.get_patient_info_by_id(patient_id)
     patient_name = patient_info['name']

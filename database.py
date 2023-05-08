@@ -393,3 +393,30 @@ def get_patient_appointment_with_clinic_id(patient_id, clinic_id):
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
         return {'have_appointment': False}
+
+
+def doctor_login(doc_id, password):
+    """Doctor login.
+
+    :param str doc_id: Registered doctor id
+    :param str password: Registered doctor password
+    :rtype: dict
+    """
+    try:
+        connection.autocommit = True
+        statement = f"SELECT * FROM doctor_base WHERE doc_id = '{doc_id}' AND password = '{password}'"
+        cursor.execute(statement)
+        for result in cursor:
+            doctor_info = result
+        return {
+            'login': True,
+            'doc_id': doctor_info[0],
+            'doc_name': doctor_info[1],
+            'department': doctor_info[2]
+        }
+    except (TypeError, UnboundLocalError):
+        print("Error retrieving entry from database, no matching results")
+        return {'login': False}
+    except database.errors as error:
+        print(f"Error retrieving entry from database: {error}")
+        return {'login': False}
