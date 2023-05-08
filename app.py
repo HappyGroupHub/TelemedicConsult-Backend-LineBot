@@ -372,10 +372,10 @@ def handle_message(event):
 
     if message_received == "查詢預約" and not processing_tasks(line_id):
         patient_id = database.get_patient_info_by_line_id(line_id)['id']
-        clinic_ids = database.get_undone_patient_appointment(patient_id)
-        reply_message = f"您這個月的預約有 {len(clinic_ids)} 則 \n"
-        for clinic_id in clinic_ids:
-            clinic_info = database.get_clinic_info(clinic_id)
+        undone_clinic_ids = database.get_undone_patient_appointment(patient_id)
+        reply_message = f"您這個月的預約有 {len(undone_clinic_ids)} 則 \n"
+        for clinic_id in undone_clinic_ids:
+            clinic_info = database.get_ongoing_clinic_info(clinic_id)
             reply_message += "---------------------------- \n" \
                              f"預約日期: {clinic_info['date']}\n" \
                              f"預約時段: {clinic_info['time_period']}\n" \
@@ -383,14 +383,19 @@ def handle_message(event):
         line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
     if message_received == "查詢看診進度" and not processing_tasks(line_id):
-        if database.is_line_registered(line_id) == "Error" or not database.is_line_registered(
-                line_id):
-            reply_message = "您尚未綁定Line帳號\n請先至會員服務進行初次綁定"
-            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
-        elif database.is_line_registered(line_id):
-            info = database.get_patient_info_by_line_id(line_id)
-            reply_message = f"(姓名: {info.get('name')}\n身分證字號: {info.get('id')}\n生日: {info.get('birthday')}\n性別: {info.get('sex')}"
-            line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+        patient_id = database.get_patient_info_by_line_id(line_id)['id']
+        ongoing_appointment_info = database.get_ongoing_appointment(patient_id)
+        ongoing_clinic_info = database.get_ongoing_clinic_info(ongoing_appointment_info['clinic_id'])
+        if ongoing_appointment_info is None:
+            reply_message = "您目前沒有預約"
+        else:
+            reply_message = f"目前看診進度 : {ongoing_clinic_info['progress']} 號 \n" \
+                            f"您的號碼 : {ongoing_appointment_info['appointment_num']} 號 \n" \
+                            "---------------------------- \n" \
+                            f"預約日期: {ongoing_clinic_info['date']}\n" \
+                            f"預約時段: {ongoing_clinic_info['time_period']}\n" \
+                            f"預約醫生: {ongoing_clinic_info['doc_name']}\n"
+        line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
 
 @app.route('/from_backend', methods=['POST'])

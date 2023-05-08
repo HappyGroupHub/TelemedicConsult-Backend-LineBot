@@ -326,7 +326,7 @@ def make_appointment(clinic_id, patient_id):
     :rtype: int
     """
     patient_name = get_patient_info_by_id(patient_id)['name']
-    clinic_info = get_clinic_info(clinic_id)
+    clinic_info = get_ongoing_clinic_info(clinic_id)
     if clinic_info is None:
         return 0
     appointment_num = clinic_info['biggest_appointment_num'] + 1
@@ -351,7 +351,7 @@ def cancel_appointment(patient_id, clinic_id):
     :param str patient_id: Registered patient id
     :param str clinic_id: Registered clinic id
     """
-    clinic_info = get_clinic_info(clinic_id)
+    clinic_info = get_ongoing_clinic_info(clinic_id)
     total_appointment = clinic_info['total_appointment'] - 1
     try:
         statement = f"DELETE FROM appointment_base WHERE patient_id = '{patient_id}' AND clinic_id = '{clinic_id}'"
@@ -416,6 +416,72 @@ def get_undone_patient_appointment(patient_id):
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
         return []
+
+
+def get_ongoing_appointment(patient_id):
+    """Get ongoing appointment.
+
+    :param str patient_id: Registered patient ID
+    :return: Dictionary containing the clinic ID and appointment number of the ongoing appointment
+    :rtype: dict
+    """
+    try:
+        statement = f"SELECT * FROM appointment_base WHERE patient_id = '{patient_id}' AND " \
+                    f"DATE(start_time) = CURDATE() AND end_time IS NULL"
+        cursor.execute(statement)
+        ongoing_appointment_info = cursor.fetchone()
+
+        if ongoing_appointment_info:
+            return {
+                'clinic_id': ongoing_appointment_info[3],
+                'appointment_num': ongoing_appointment_info[4],
+            }
+        else:
+            return None
+
+    except (TypeError, UnboundLocalError):
+        print("Error retrieving entry from the database, no matching results")
+        return None
+    except database.errors as error:
+        print(f"Error retrieving entry from the database: {error}")
+        return None
+
+
+def get_ongoing_clinic_info(clinic_id):
+    """Get clinic info by given clinic id.
+
+    :param str clinic_id: Given clinic id
+    :return: Dictionary containing the clinic information
+    :rtype: dict
+    """
+    try:
+        statement = f"SELECT * FROM clinic_base WHERE clinic_id = '{clinic_id}' AND end_time IS NULL "
+        cursor.execute(statement)
+        ongoing_clinic_info = cursor.fetchone()
+
+        if ongoing_clinic_info:
+            return {
+                'clinic_id': ongoing_clinic_info[0],
+                'doc_id': ongoing_clinic_info[1],
+                'doc_name': ongoing_clinic_info[2],
+                'date': ongoing_clinic_info[3],
+                'time_period': ongoing_clinic_info[4],
+                'start_time': ongoing_clinic_info[5],
+                'end_time': ongoing_clinic_info[6],
+                'link': ongoing_clinic_info[7],
+                'total_appointment': ongoing_clinic_info[8],
+                'biggest_appointment_num': ongoing_clinic_info[9],
+                'progress': ongoing_clinic_info[10]
+            }
+        else:
+            return None
+
+    except (TypeError, UnboundLocalError):
+        print("Error retrieving entry from the database, no matching results")
+        return None
+    except database.errors as error:
+        print(f"Error retrieving entry from the database: {error}")
+        return None
 
 
 def doctor_login(doc_id, password):
