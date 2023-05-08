@@ -326,7 +326,6 @@ def handle_message(event):
                                 label="點我取得掛號連結",
                                 text="傳送掛號連結"
                             ),
-
                         ]
                     ),
                     CarouselColumn(
@@ -360,8 +359,14 @@ def handle_message(event):
         reply_message = "http://localhost:5173//reservation.html"
         line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
-    if message_received == "查詢看診進度" and not processing_tasks(line_id):
-        reply_message = "開發中..."
+    if message_received == "查詢預約" and not processing_tasks(line_id):
+        patient_id = database.get_patient_info_by_line_id(line_id)['id']
+        clinic_id = database.get_undone_patient_appointment(patient_id)['clinic_id']
+        clinic_info = database.get_clinic_info(clinic_id)
+        reply_message = f"您的預約資訊如下:\n" \
+                        f"預約日期: {clinic_info['date']}\n" \
+                        f"預約時段: {clinic_info['time_period']}\n" \
+                        f"預約醫生 : {clinic_info['doc_name']}\n"
         line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
     if message_received == "獲取個人資料(測試用)" and not processing_tasks(line_id):
@@ -392,6 +397,7 @@ def from_backend():
         return 'OK', 200
     else:
         abort(400)
+
 
 if __name__ == "__main__":
     app.run(port=config.get('line_port'))
