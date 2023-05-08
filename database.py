@@ -519,11 +519,11 @@ def get_doctor_clinic_list(doc_id):
     :param str doc_id: Registered doctor id
     :rtype: list
     """
+    clinics = []
     try:
         connection.autocommit = True
         statement = f"SELECT * FROM clinic_base WHERE doc_id = '{doc_id}' AND date >= '{(datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')}' AND date <= '{(datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d')}'"
         cursor.execute(statement)
-        clinics = []
         for result in cursor:
             clinics.append({
                 'clinic_id': result[0],
@@ -531,8 +531,8 @@ def get_doctor_clinic_list(doc_id):
                 'doc_name': result[2],
                 'date': result[3].strftime('%Y-%m-%d'),
                 'time_period': result[4],
-                'start_time': result[5].strftime('%Y-%m-%d %H:%M:%S'),
-                'end_time': result[6].strftime('%Y-%m-%d %H:%M:%S'),
+                'start_time': result[5],
+                'end_time': result[6],
                 'link': result[7],
                 'total_appointment': result[8],
                 'biggest_appointment_num': result[9],
