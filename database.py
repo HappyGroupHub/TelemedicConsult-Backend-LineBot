@@ -1,4 +1,5 @@
 """This python file will handle all the database things."""
+from datetime import datetime, timedelta
 
 import mysql.connector as database
 
@@ -420,3 +421,39 @@ def doctor_login(doc_id, password):
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
         return {'login': False}
+
+
+def get_doctor_clinic_list(doc_id):
+    """Get doctor clinics list.
+
+    Will only shows the clinics from last week to next week.
+
+    :param str doc_id: Registered doctor id
+    :rtype: list
+    """
+    try:
+        connection.autocommit = True
+        statement = f"SELECT * FROM clinic_base WHERE doc_id = '{doc_id}' AND date >= '{(datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')}' AND date <= '{(datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d')}'"
+        cursor.execute(statement)
+        clinics = []
+        for result in cursor:
+            clinics.append({
+                'clinic_id': result[0],
+                'doc_id': result[1],
+                'doc_name': result[2],
+                'date': result[3].strftime('%Y-%m-%d'),
+                'time_period': result[4],
+                'start_time': result[5].strftime('%Y-%m-%d %H:%M:%S'),
+                'end_time': result[6].strftime('%Y-%m-%d %H:%M:%S'),
+                'link': result[7],
+                'total_appointment': result[8],
+                'biggest_appointment_num': result[9],
+                'progress': result[10]
+            })
+        return clinics
+    except (TypeError, UnboundLocalError):
+        print("Error retrieving entry from database, no matching results")
+        return []
+    except database.errors as error:
+        print(f"Error retrieving entry from database: {error}")
+        return []
