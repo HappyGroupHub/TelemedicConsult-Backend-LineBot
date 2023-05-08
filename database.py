@@ -460,6 +460,8 @@ def get_undone_clinic_info(clinic_id):
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
         return []
+
+
 def doctor_login(doc_id, password):
     """Doctor login.
 

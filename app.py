@@ -329,6 +329,17 @@ def handle_message(event):
                         ]
                     ),
                     CarouselColumn(
+                        thumbnail_image_url="https://media.discordapp.net/attachments/930101666861187172/1105054810643898368/cc02260c1353954c.jpg?width=1087&height=720",
+                        title='查詢預約',
+                        text='您可以在此查詢您的預約',
+                        actions=[
+                            MessageAction(
+                                label='點我查詢預約',
+                                text='查詢預約'
+                            )
+                        ]
+                    ),
+                    CarouselColumn(
                         thumbnail_image_url="https://media.discordapp.net/attachments/930101666861187172/1102477946247192627/4.png?width=1450&height=960",
                         title='查詢看診進度',
                         text='您可以在此查詢目前看診進度',
