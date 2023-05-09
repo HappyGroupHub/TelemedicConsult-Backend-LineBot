@@ -112,6 +112,7 @@ def update_clinic_status():
         'end_time': status_dict.get('end_time', None),
         'link': status_dict.get('link', None),
         'total_appointment': status_dict.get('total_appointment', None),
+        'biggest_appointment_num': status_dict.get('biggest_appointment_num', None),
         'progress': status_dict.get('progress', None)
     })
     return jsonify(response)
