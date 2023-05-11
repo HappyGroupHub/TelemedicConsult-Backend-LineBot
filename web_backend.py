@@ -186,7 +186,27 @@ def get_patients_by_clinic_id():
     post_data = request.get_json()
     clinic_id = post_data['clinic_id']
     patients = database.get_patients_by_clinic_id(clinic_id)
+    patients_id = [patient['patient_id'] for patient in patients]
+    patients_name = [patient['patient_name'] for patient in patients]
+    appointment_nums = [patient['appointment_num'] for patient in patients]
+    response['patients_id'] = patients_id
+    response['patients_name'] = patients_name
+    response['appointment_nums'] = appointment_nums
     response['patients'] = patients
+    return jsonify(response)
+
+
+@app.route('/notify_patient_for_appointment', methods=['GET', 'POST'])
+def notify_patient_for_appointment():
+    response = {'status': 'success'}
+    post_data = request.get_json()
+    patient_id = post_data['patient_id']
+    clinic_id = post_data['clinic_id']
+    clinic_info = database.get_clinic_info(clinic_id)
+    action_info = {'doc_name': clinic_info['doc_name'],
+                   'date': clinic_info['date'].strftime("%Y-%m-%d"),
+                   'time_period': clinic_info['time_period']}
+    to_line(patient_id, 'notify_for_appointment', **action_info)
     return jsonify(response)
 
 
