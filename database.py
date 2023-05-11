@@ -418,16 +418,15 @@ def get_undone_clinic_ids(patient_id):
         return []
 
 
-def get_undone_appointment(patient_id, clinic_id):
+def get_undone_appointment(clinic_id):
     """Check patient appointment with clinic id.
 
-    :param str patient_id: Registered patient id
     :param str clinic_id: Registered clinic id
     :rtype: dict
     """
     try:
         connection.autocommit = True
-        statement = f"SELECT * FROM appointment_base WHERE patient_id = '{patient_id}' AND clinic_id = '{clinic_id}' AND end_time is NULL"
+        statement = f"SELECT * FROM appointment_base WHERE clinic_id = '{clinic_id}'AND end_time is NULL"
         cursor.execute(statement)
         for result in cursor:
             appointment_info = result
