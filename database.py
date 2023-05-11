@@ -576,3 +576,29 @@ def get_doctor_clinic_list(doc_id):
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
         return []
+
+
+def get_patients_by_clinic_id(clinic_id):
+    """Get patients list by clinic id.
+
+    :param str clinic_id: Registered clinic id
+    :rtype: list
+    """
+    patients = []
+    try:
+        connection.autocommit = True
+        statement = f"SELECT patient_id, patient_name, appointment_num FROM appointment_base WHERE clinic_id = '{clinic_id}' ORDER BY appointment_num ASC"
+        cursor.execute(statement)
+        for result in cursor:
+            patients.append({
+                'patient_id': result[0],
+                'patient_name': result[1],
+                'appointment_num': result[2]
+            })
+        return patients
+    except (TypeError, UnboundLocalError):
+        print("Error retrieving entry from database, no matching results")
+        return []
+    except database.errors as error:
+        print(f"Error retrieving entry from database: {error}")
+        return []
