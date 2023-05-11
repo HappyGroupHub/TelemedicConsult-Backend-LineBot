@@ -380,18 +380,30 @@ def handle_message(event):
             for clinic_id in undone_clinic_ids:
                 clinic_info = database.get_clinic_info(clinic_id)
                 undone_appointment_info = database.get_undone_appointment(clinic_id)
-                reply_message += "---------------------------- \n" \
+                reply_message += "\n----------------------------\n" \
                                  f"預約日期: {clinic_info['date']}\n" \
                                  f"預約時段: {clinic_info['time_period']}\n" \
                                  f"預約醫生: {clinic_info['doc_name']}\n" \
-                                 f"預約號碼: {undone_appointment_info['appointment_num']}\n"
+                                 f"預約號碼: {undone_appointment_info['appointment_num']}"
         line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
     if message_received == "查詢看診進度" and not processing_tasks(line_id):
         patient_id = database.get_patient_info_by_line_id(line_id)['id']
+        undone_clinic_ids = database.get_undone_clinic_ids(patient_id)
         ongoing_appointment_info = database.get_ongoing_appointment(patient_id)
-        if ongoing_appointment_info is None:
+        if len(undone_clinic_ids) == 0:
             reply_message = "您目前沒有預約"
+        elif ongoing_appointment_info is None:
+            clinic_info = database.get_clinic_info(undone_clinic_ids[0])
+            undone_appointment_info = database.get_undone_appointment(undone_clinic_ids[0])
+            reply_message = "您目前沒有正在看診的預約\n"\
+                            "------------------------\n"\
+                            "這是您最近的預約：\n" \
+                            f"預約日期: {clinic_info['date']}\n" \
+                            f"預約時段: {clinic_info['time_period']}\n" \
+                            f"預約醫生: {clinic_info['doc_name']}\n" \
+                            f"預約號碼: {undone_appointment_info['appointment_num']}"
+
         else:
             ongoing_clinic_info = database.get_ongoing_clinic_info(ongoing_appointment_info['clinic_id'])
             reply_message = f"目前看診進度 : {ongoing_clinic_info['progress']} 號 \n" \
