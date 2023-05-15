@@ -421,12 +421,37 @@ def from_backend():
     patient_name = post_data.get('patient_name')
     line_id = post_data.get('line_id')
     if post_data.get('action') == 'make_appointment':
+        action_info = post_data.get('action_info')
         push_message = f"{patient_name}您好!\n" \
-                       f"您已成功預約{post_data['action_info']['doc_name']}醫師於" \
-                       f"{post_data['action_info']['date']} " \
-                       f"{post_data['action_info']['time_period']}的線上門診\n" \
-                       f"你的預約號碼為 {post_data['action_info']['appointment_num']}\n" \
+                       f"您已成功預約{action_info['doc_name']}醫師於" \
+                       f"{action_info['date']} " \
+                       f"{action_info['time_period']}的線上門診\n" \
+                       f"你的預約號碼為 {action_info['appointment_num']}\n" \
                        f"請務必準時前往就醫，謝謝!"
+        line_bot_api.push_message(line_id, TextSendMessage(text=push_message))
+        return 'OK', 200
+    if post_data.get('action') == 'notify_appointment':
+        action_info = post_data.get('action_info')
+        push_message = f"{patient_name}您好!\n" \
+                       f"您預約由{action_info['doc_name']}醫師於" \
+                       f"{action_info['date']} " \
+                       f"{action_info['time_period']}的線上門診已接近看診時間\n" \
+                       f"\n" \
+                       f"您的預約號碼 {action_info['appointment_num']} 已接近看診時間\n" \
+                       f"目前看診的進度為: {action_info['next_appointment_num']} 號\n" \
+                       f"\n" \
+                       f"屆時將傳送會議連結給您! 請務必準時前往就醫，謝謝!"
+        line_bot_api.push_message(line_id, TextSendMessage(text=push_message))
+        return 'OK', 200
+    if post_data.get('action') == 'give_clinic_link':
+        action_info = post_data.get('action_info')
+        push_message = f"{patient_name}您好!\n" \
+                       f"您預約由{action_info['doc_name']}醫師於" \
+                       f"{action_info['date']} " \
+                       f"{action_info['time_period']}的線上門診已經輪到你看診囉!\n" \
+                       f"請盡速點擊以下的連結進入診間!" \
+                       f"\n" \
+                       f"{action_info['clinic_link']}"
         line_bot_api.push_message(line_id, TextSendMessage(text=push_message))
         return 'OK', 200
     else:

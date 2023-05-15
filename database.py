@@ -17,11 +17,11 @@ connection = database.connect(
 cursor = connection.cursor()
 
 
-def register_patient(name, id, sex, birthday, blood_type, ic_card_number, phone_number, address,
+def register_patient(name, id, sex, birthday, blood_type, phone_number, address,
                      height, weight,
                      ice_contact, ice_relation, ice_phone):
     try:
-        statement = f"INSERT INTO patient_base (name, id, sex, birthday, blood_type, ic_card_number, phone_number, address, height, weight, ice_contact, ice_relation, ice_phone) VALUE ('{name}', '{id}', '{sex}', '{birthday}', '{blood_type}', '{ic_card_number}', '{phone_number}', '{address}', '{height}', '{weight}', '{ice_contact}', '{ice_relation}', '{ice_phone}')"
+        statement = f"INSERT INTO patient_base (name, id, sex, birthday, blood_type, phone_number, address, height, weight, ice_contact, ice_relation, ice_phone) VALUE ('{name}', '{id}', '{sex}', '{birthday}', '{blood_type}', '{phone_number}', '{address}', '{height}', '{weight}', '{ice_contact}', '{ice_relation}', '{ice_phone}')"
         cursor.execute(statement)
         connection.commit()
     except database.errors as error:
@@ -396,6 +396,37 @@ def get_patient_appointment_with_clinic_id(patient_id, clinic_id):
         return {'have_appointment': False}
 
 
+def get_patient_appointment_with_clinic_id_and_appointment_num(clinic_id, appointment_num):
+    """Check patient appointment with clinic id.
+
+    :param str clinic_id: Registered clinic id
+    :param str appointment_num: Registered appointment number
+    :rtype: dict
+    """
+    try:
+        connection.autocommit = True
+        statement = f"SELECT * FROM appointment_base WHERE clinic_id = '{clinic_id}' AND appointment_num = '{appointment_num}'"
+        cursor.execute(statement)
+        for result in cursor:
+            appointment_info = result
+        return {
+            'have_appointment': True,
+            'order_id': appointment_info[0],
+            'patient_id': appointment_info[1],
+            'patient_name': appointment_info[2],
+            'clinic_id': appointment_info[3],
+            'appointment_num': appointment_info[4],
+            'start_time': appointment_info[5],
+            'end_time': appointment_info[6],
+        }
+    except (TypeError, UnboundLocalError):
+        print("Error retrieving entry from database, no matching results")
+        return {'have_appointment': False}
+    except database.errors as error:
+        print(f"Error retrieving entry from database: {error}")
+        return {'have_appointment': False}
+
+
 def get_undone_clinic_ids(patient_id):
     """Check patient appointment with patient_id
 
@@ -601,3 +632,35 @@ def get_patients_by_clinic_id(clinic_id):
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
         return []
+
+
+def update_appointment_start_time_to_now(clinic_id, appointment_num):
+    """Update appointment start time to now.
+
+    :param str clinic_id: Registered clinic id
+    :param str appointment_num: Registered appointment number
+    """
+    try:
+        statement = f"UPDATE appointment_base SET start_time = '{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}' WHERE clinic_id = '{clinic_id}' AND appointment_num = '{appointment_num}'"
+        cursor.execute(statement)
+        connection.commit()
+    except (TypeError, UnboundLocalError):
+        print("Error updating entry from database, no matching results")
+    except database.errors as error:
+        print(f"Error updating entry from database: {error}")
+
+
+def update_appointment_end_time_to_now(clinic_id, appointment_num):
+    """Update appointment end time to now.
+
+    :param str clinic_id: Registered clinic id
+    :param str appointment_num: Registered appointment number
+    """
+    try:
+        statement = f"UPDATE appointment_base SET end_time = '{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}' WHERE clinic_id = '{clinic_id}' AND appointment_num = '{appointment_num}'"
+        cursor.execute(statement)
+        connection.commit()
+    except (TypeError, UnboundLocalError):
+        print("Error updating entry from database, no matching results")
+    except database.errors as error:
+        print(f"Error updating entry from database: {error}")

@@ -21,7 +21,6 @@ def register_patient():
     sex = post_data['sex']
     birthday = post_data['birthday']
     blood_type = post_data['blood_type']
-    ic_card_number = post_data['ic_card_number']
     phone_number = post_data['phone_number']
     address = post_data['address']
     height = post_data['height']
@@ -29,7 +28,7 @@ def register_patient():
     ice_contact = post_data['ice_contact']
     ice_relation = post_data['ice_relation']
     ice_phone = post_data['ice_phone']
-    database.register_patient(name, id, sex, birthday, blood_type, ic_card_number, phone_number,
+    database.register_patient(name, id, sex, birthday, blood_type, phone_number,
                               address, height, weight, ice_contact, ice_relation, ice_phone)
     response['message'] = 'Patient registered successfully'
     return jsonify(response)
@@ -196,17 +195,42 @@ def get_patients_by_clinic_id():
     return jsonify(response)
 
 
-@app.route('/notify_patient_for_appointment', methods=['GET', 'POST'])
-def notify_patient_for_appointment():
+@app.route('/next_appointment', methods=['GET', 'POST'])
+def next_appointment():
     response = {'status': 'success'}
     post_data = request.get_json()
-    patient_id = post_data['patient_id']
     clinic_id = post_data['clinic_id']
     clinic_info = database.get_clinic_info(clinic_id)
+    current_appointment_num = post_data['current_appointment_num']
+    next_appointment_num = post_data['next_appointment_num']
+    notify_appointment_num = post_data['notify_appointment_num']
+    database.update_appointment_end_time_to_now(clinic_id, current_appointment_num)
+    patient_appointment = database.get_patient_appointment_with_clinic_id_and_appointment_num(
+        clinic_id,
+        notify_appointment_num)
+    patient_id = patient_appointment['patient_id']
     action_info = {'doc_name': clinic_info['doc_name'],
                    'date': clinic_info['date'].strftime("%Y-%m-%d"),
-                   'time_period': clinic_info['time_period']}
-    to_line(patient_id, 'notify_for_appointment', **action_info)
+                   'time_period': clinic_info['time_period'],
+                   'link': clinic_info['link']}
+    to_line(patient_id, 'give_clinic_link', **action_info)
+    database.update_clinic_status(clinic_id, **{'start_time': None, 'end_time': None, 'link': None,
+                                                'progress': next_appointment_num,
+                                                'biggest_appointment_num': None,
+                                                'total_appointment': None})
+    database.update_appointment_start_time_to_now(clinic_id, next_appointment_num)
+    if notify_appointment_num is not None:
+        patient_appointment = database.get_patient_appointment_with_clinic_id_and_appointment_num(
+            clinic_id,
+            notify_appointment_num)
+        patient_id = patient_appointment['patient_id']
+        appointment_num = patient_appointment['appointment_num']
+        action_info = {'doc_name': clinic_info['doc_name'],
+                       'date': clinic_info['date'].strftime("%Y-%m-%d"),
+                       'time_period': clinic_info['time_period'],
+                       'appointment_num': appointment_num,
+                       'next_appointment_num': next_appointment_num}
+        to_line(patient_id, 'notify_appointment', **action_info)
     return jsonify(response)
 
 
