@@ -451,7 +451,7 @@ def from_backend():
                        f"{action_info['time_period']}的線上門診已經輪到你看診囉!\n" \
                        f"請盡速點擊以下的連結進入診間!" \
                        f"\n" \
-                       f"{action_info['clinic_link']}"
+                       f"{action_info['link']}"
         line_bot_api.push_message(line_id, TextSendMessage(text=push_message))
         return 'OK', 200
     else:

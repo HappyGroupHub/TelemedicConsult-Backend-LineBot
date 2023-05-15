@@ -207,7 +207,7 @@ def next_appointment():
     database.update_appointment_end_time_to_now(clinic_id, current_appointment_num)
     patient_appointment = database.get_patient_appointment_with_clinic_id_and_appointment_num(
         clinic_id,
-        notify_appointment_num)
+        next_appointment_num)
     patient_id = patient_appointment['patient_id']
     action_info = {'doc_name': clinic_info['doc_name'],
                    'date': clinic_info['date'].strftime("%Y-%m-%d"),
