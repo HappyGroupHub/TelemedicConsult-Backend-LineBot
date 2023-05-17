@@ -204,21 +204,23 @@ def next_appointment():
     current_appointment_num = post_data['current_appointment_num']
     next_appointment_num = post_data['next_appointment_num']
     notify_appointment_num = post_data['notify_appointment_num']
-    database.update_appointment_end_time_to_now(clinic_id, current_appointment_num)
-    patient_appointment = database.get_patient_appointment_with_clinic_id_and_appointment_num(
-        clinic_id,
-        next_appointment_num)
-    patient_id = patient_appointment['patient_id']
-    action_info = {'doc_name': clinic_info['doc_name'],
-                   'date': clinic_info['date'].strftime("%Y-%m-%d"),
-                   'time_period': clinic_info['time_period'],
-                   'link': clinic_info['link']}
-    to_line(patient_id, 'give_clinic_link', **action_info)
-    database.update_clinic_status(clinic_id, **{'start_time': None, 'end_time': None, 'link': None,
-                                                'progress': next_appointment_num,
-                                                'biggest_appointment_num': None,
-                                                'total_appointment': None})
-    database.update_appointment_start_time_to_now(clinic_id, next_appointment_num)
+    if current_appointment_num is not None or current_appointment_num is not 0:
+        database.update_appointment_end_time_to_now(clinic_id, current_appointment_num)
+    if next_appointment_num is not None:
+        patient_appointment = database.get_patient_appointment_with_clinic_id_and_appointment_num(
+            clinic_id,
+            next_appointment_num)
+        patient_id = patient_appointment['patient_id']
+        action_info = {'doc_name': clinic_info['doc_name'],
+                       'date': clinic_info['date'].strftime("%Y-%m-%d"),
+                       'time_period': clinic_info['time_period'],
+                       'link': clinic_info['link']}
+        to_line(patient_id, 'give_clinic_link', **action_info)
+        database.update_clinic_status(clinic_id, **{'start_time': None, 'end_time': None, 'link': None,
+                                                    'progress': next_appointment_num,
+                                                    'biggest_appointment_num': None,
+                                                    'total_appointment': None})
+        database.update_appointment_start_time_to_now(clinic_id, next_appointment_num)
     if notify_appointment_num is not None:
         patient_appointment = database.get_patient_appointment_with_clinic_id_and_appointment_num(
             clinic_id,
