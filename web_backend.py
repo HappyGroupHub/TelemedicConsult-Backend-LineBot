@@ -204,7 +204,7 @@ def next_appointment():
     current_appointment_num = post_data['current_appointment_num']
     next_appointment_num = post_data['next_appointment_num']
     notify_appointment_num = post_data['notify_appointment_num']
-    if current_appointment_num is not None or current_appointment_num is not 0:
+    if current_appointment_num is not None or current_appointment_num != 0:
         database.update_appointment_end_time_to_now(clinic_id, current_appointment_num)
     if next_appointment_num is not None:
         patient_appointment = database.get_patient_appointment_with_clinic_id_and_appointment_num(
@@ -233,6 +233,24 @@ def next_appointment():
                        'appointment_num': appointment_num,
                        'next_appointment_num': next_appointment_num}
         to_line(patient_id, 'notify_appointment', **action_info)
+    return jsonify(response)
+
+
+@app.route('/pass_appointment', methods=['GET', 'POST'])
+def pass_appointment():
+    response = {'status': 'success'}
+    post_data = request.get_json()
+    clinic_id = post_data['clinic_id']
+    clinic_info = database.get_clinic_info(clinic_id)
+    appointment_num = post_data['appointment_num']
+    patient_appointment = database.get_patient_appointment_with_clinic_id_and_appointment_num(
+        clinic_id, appointment_num)
+    patient_id = patient_appointment['patient_id']
+    action_info = {'doc_name': clinic_info['doc_name'],
+                   'date': clinic_info['date'].strftime("%Y-%m-%d"),
+                   'time_period': clinic_info['time_period'],
+                   'appointment_num': appointment_num}
+    to_line(patient_id, 'pass_appointment', **action_info)
     return jsonify(response)
 
 

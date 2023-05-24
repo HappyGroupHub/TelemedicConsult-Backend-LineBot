@@ -454,6 +454,19 @@ def from_backend():
                        f"{action_info['link']}"
         line_bot_api.push_message(line_id, TextSendMessage(text=push_message))
         return 'OK', 200
+    if post_data.get('action') == 'pass_appointment':
+        action_info = post_data.get('action_info')
+        push_message = f"{patient_name}您好!\n" \
+                       f"您預約由{action_info['doc_name']}醫師於" \
+                       f"{action_info['date']} " \
+                       f"{action_info['time_period']}的線上門診已經過號!\n" \
+                       f"看到此封訊息時*請勿點擊*上方的連結進入診間" \
+                       f"\n" \
+                       f"若您已準備好看診請輸入「過號報到」" \
+                       f"我們將盡快為您安排看診!" \
+                       f"屆時會再透過此聊天室傳送提醒訊息!" \
+                       f"請務必留意並準時進入診間，謝謝!"
+        line_bot_api.push_message(line_id, TextSendMessage(text=push_message))
     else:
         abort(400)
 
