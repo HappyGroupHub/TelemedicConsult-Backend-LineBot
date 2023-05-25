@@ -545,6 +545,32 @@ def get_ongoing_clinic_info(clinic_id):
         return None
 
 
+def get_patient_reservation_list(patient_id):
+    """Get patient reservation list.
+
+    :param str patient_id: Registered patient ID
+    :return: Dictionary containing the clinic ID and appointment number of the ongoing appointment
+    :rtype: dict
+    """
+    try:
+        statement = f"SELECT * FROM appointment_base WHERE patient_id = '{patient_id}' AND " \
+                    f"DATE(end_time) IS NULL"
+        cursor.execute(statement)
+        appointment_list = cursor.fetchall()
+
+        if appointment_list:
+            return appointment_list
+        else:
+            return None
+
+    except (TypeError, UnboundLocalError):
+        print("Error retrieving entry from the database, no matching results")
+        return None
+    except database.errors as error:
+        print(f"Error retrieving entry from the database: {error}")
+        return None
+
+
 def doctor_login(doc_id, password):
     """Doctor login.
 

@@ -179,6 +179,16 @@ def get_doctor_clinic_list():
     return jsonify(response)
 
 
+@app.route('/get_patient_reservation_list', methods=['GET', 'POST'])
+def get_patient_reservation_list():
+    response = {'status': 'success'}
+    post_data = request.get_json()
+    patient_id = post_data['patient_id']
+    reservation_list = database.get_patient_reservation_list(patient_id)
+    response['reservation_list'] = reservation_list
+    return jsonify(response)
+
+
 @app.route('/get_patients_by_clinic_id', methods=['GET', 'POST'])
 def get_patients_by_clinic_id():
     response = {'status': 'success'}
