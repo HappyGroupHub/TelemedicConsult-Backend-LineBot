@@ -545,12 +545,12 @@ def get_ongoing_clinic_info(clinic_id):
         return None
 
 
-def get_patient_reservation_list(patient_id):
+def get_unstarted_patient_reservation_appointments(patient_id):
     """Get patient reservation list.
 
     :param str patient_id: Registered patient ID
     :return: Dictionary containing the clinic ID and appointment number of the ongoing appointment
-    :rtype: dict
+    :rtype: list
     """
     reservation_list = []
     try:

@@ -184,7 +184,10 @@ def get_patient_reservation_list():
     response = {'status': 'success'}
     post_data = request.get_json()
     patient_id = post_data['patient_id']
-    reservation_list = database.get_patient_reservation_list(patient_id)
+    reservation_list = database.get_unstarted_patient_reservation_appointments(patient_id)
+    for appointment in reservation_list:
+        clinic_info = database.get_clinic_info(appointment['clinic_id'])
+        appointment.update(clinic_info)
     response['reservation_list'] = reservation_list
     return jsonify(response)
 
