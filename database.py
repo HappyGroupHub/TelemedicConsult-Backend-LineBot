@@ -552,22 +552,25 @@ def get_patient_reservation_list(patient_id):
     :return: Dictionary containing the clinic ID and appointment number of the ongoing appointment
     :rtype: dict
     """
+    reservation_list = []
     try:
+        connection.autocommit = True
         statement = f"SELECT * FROM appointment_base WHERE patient_id = '{patient_id}' AND " \
                     f"DATE(end_time) IS NULL"
         cursor.execute(statement)
         for result in cursor:
             appointment_info = result
-        return {
-            'have_appointment': True,
-            'order_id': appointment_info[0],
-            'patient_id': appointment_info[1],
-            'patient_name': appointment_info[2],
-            'clinic_id': appointment_info[3],
-            'appointment_num': appointment_info[4],
-            'start_time': appointment_info[5],
-            'end_time': appointment_info[6],
-        }
+            reservation_list.append({
+                'have_appointment': True,
+                'order_id': appointment_info[0],
+                'patient_id': appointment_info[1],
+                'patient_name': appointment_info[2],
+                'clinic_id': appointment_info[3],
+                'appointment_num': appointment_info[4],
+                'start_time': appointment_info[5],
+                'end_time': appointment_info[6],
+            })
+        return reservation_list
     except (TypeError, UnboundLocalError):
         print("Error retrieving entry from the database, no matching results")
         return None
