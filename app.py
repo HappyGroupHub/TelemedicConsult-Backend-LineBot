@@ -352,12 +352,12 @@ def handle_message(event):
                     ),
                     CarouselColumn(
                         thumbnail_image_url="https://media.discordapp.net/attachments/930101666861187172/1102477946448531516/5.png?width=1450&height=960",
-                        title='過號',
-                        text='若您過號了也不用擔心\n您可以點選過號，我們會盡快幫您安排看診',
+                        title='過號報到',
+                        text='若您過號了也不用擔心\n您可以點選過號報到，我們會盡快幫您安排看診',
                         actions=[
                             MessageAction(
-                                label='點我過號',
-                                text='過號'
+                                label='點我過號報到',
+                                text='過號報到'
                             )
                         ]
                     )
@@ -376,7 +376,7 @@ def handle_message(event):
         if len(undone_clinic_ids) == 0:
             reply_message = "您沒有任何預約"
         else:
-            reply_message = f"您這個月的預約有 {len(undone_clinic_ids)} 則 \n"
+            reply_message = f"您這個有 {len(undone_clinic_ids)} 則預約 \n"
             for clinic_id in undone_clinic_ids:
                 clinic_info = database.get_clinic_info(clinic_id)
                 undone_appointment_info = database.get_undone_appointment(clinic_id)
@@ -396,9 +396,9 @@ def handle_message(event):
         elif ongoing_appointment_info is None:
             clinic_info = database.get_clinic_info(undone_clinic_ids[0])
             undone_appointment_info = database.get_undone_appointment(undone_clinic_ids[0])
-            reply_message = "您目前沒有正在看診的預約\n"\
-                            "------------------------\n"\
-                            "這是您最近的預約：\n" \
+            reply_message = "您目前沒有正在看診的預約\n" \
+                            "這是您最近的預約\n" \
+                            "------------------------\n" \
                             f"預約日期: {clinic_info['date']}\n" \
                             f"預約時段: {clinic_info['time_period']}\n" \
                             f"預約醫生: {clinic_info['doc_name']}\n" \
@@ -422,49 +422,53 @@ def from_backend():
     line_id = post_data.get('line_id')
     if post_data.get('action') == 'make_appointment':
         action_info = post_data.get('action_info')
-        push_message = f"{patient_name}您好!\n" \
-                       f"您已成功預約{action_info['doc_name']}醫師於" \
-                       f"{action_info['date']} " \
-                       f"{action_info['time_period']}的線上門診\n" \
-                       f"你的預約號碼為 {action_info['appointment_num']}\n" \
+        push_message = f"您好，{patient_name}\n" \
+                       f"您已成功預約\n" \
+                       f"以下為您的預約資訊\n" \
+                       f"------------------------\n" \
+                       f"預約日期: {action_info['date']}\n" \
+                       f"預約時段: {action_info['time_period']}\n" \
+                       f"預約醫生: {action_info['doc_name']}\n" \
+                       f"預約號碼: {action_info['appointment_num']}\n" \
+                       f"------------------------\n" \
                        f"請務必準時前往就醫，謝謝!"
         line_bot_api.push_message(line_id, TextSendMessage(text=push_message))
         return 'OK', 200
     if post_data.get('action') == 'notify_appointment':
         action_info = post_data.get('action_info')
-        push_message = f"{patient_name}您好!\n" \
-                       f"您預約由{action_info['doc_name']}醫師於" \
-                       f"{action_info['date']} " \
-                       f"{action_info['time_period']}的線上門診已接近看診時間\n" \
+        push_message = f"您好，{patient_name}\n" \
+                       f"您預約於{action_info['date']}的線上門診已接近看診時間\n" \
+                       f"屆時將傳送看診連結，請務必準時前往就醫，謝謝!" \
                        f"\n" \
-                       f"您的預約號碼 {action_info['appointment_num']} 已接近看診時間\n" \
+                       f"您的預約號碼為：{action_info['appointment_num']}號\n" \
                        f"目前看診的進度為: {action_info['next_appointment_num']} 號\n" \
-                       f"\n" \
-                       f"屆時將傳送會議連結給您! 請務必準時前往就醫，謝謝!"
+                       f"------------------------\n" \
+                       f"預約日期: {action_info['date']}\n" \
+                       f"預約時段: {action_info['time_period']}\n" \
+                       f"預約醫生: {action_info['doc_name']}\n"
         line_bot_api.push_message(line_id, TextSendMessage(text=push_message))
         return 'OK', 200
     if post_data.get('action') == 'give_clinic_link':
         action_info = post_data.get('action_info')
-        push_message = f"{patient_name}您好!\n" \
-                       f"您預約由{action_info['doc_name']}醫師於" \
-                       f"{action_info['date']} " \
-                       f"{action_info['time_period']}的線上門診已經輪到你看診囉!\n" \
+        push_message = f"您好，{patient_name}\n" \
+                       f"您預約於{action_info['date']}的線上門診已經輪到你看診囉!\n" \
                        f"請盡速點擊以下的連結進入診間!" \
                        f"\n" \
-                       f"{action_info['link']}"
+                       f"{action_info['link']}" \
+                       f"------------------------\n" \
+                       f"預約日期: {action_info['date']}\n" \
+                       f"預約時段: {action_info['time_period']}\n" \
+                       f"預約醫生: {action_info['doc_name']}\n"
         line_bot_api.push_message(line_id, TextSendMessage(text=push_message))
         return 'OK', 200
     if post_data.get('action') == 'pass_appointment':
         action_info = post_data.get('action_info')
-        push_message = f"{patient_name}您好!\n" \
-                       f"您預約由{action_info['doc_name']}醫師於" \
-                       f"{action_info['date']} " \
-                       f"{action_info['time_period']}的線上門診已經過號!\n" \
-                       f"看到此封訊息時*請勿點擊*上方的連結進入診間" \
-                       f"\n" \
-                       f"若您已準備好看診請輸入「過號報到」" \
-                       f"我們將盡快為您安排看診!" \
-                       f"屆時會再透過此聊天室傳送提醒訊息!" \
+        push_message = f"您好，{patient_name}\n" \
+                       f"您預約由於{action_info['date']}的線上門診已經過號!\n" \
+                       f"!!!！請勿點擊上方的連結!!!！\n" \
+                       f"請點選「看診功能」-->「過號報到」\n" \
+                       f"或直接輸入「過號報到」\n" \
+                       f"屆時會再傳送提醒訊息!\n" \
                        f"請務必留意並準時進入診間，謝謝!"
         line_bot_api.push_message(line_id, TextSendMessage(text=push_message))
     else:
