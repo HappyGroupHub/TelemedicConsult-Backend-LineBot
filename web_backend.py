@@ -187,7 +187,8 @@ def get_patient_reservation_list():
     reservation_list = database.get_unstarted_patient_reservation_appointments(patient_id)
     for appointment in reservation_list:
         clinic_info = database.get_clinic_info(appointment['clinic_id'])
-        appointment.update(clinic_info)
+        clinic_info['date'] = clinic_info['date'].strftime("%Y-%m-%d")
+        appointment['clinic_info'] = clinic_info
     response['reservation_list'] = reservation_list
     return jsonify(response)
 
