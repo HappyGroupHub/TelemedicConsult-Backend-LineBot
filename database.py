@@ -326,7 +326,7 @@ def make_appointment(clinic_id, patient_id):
     :rtype: int
     """
     patient_name = get_patient_info_by_id(patient_id)['name']
-    clinic_info = get_ongoing_clinic_info(clinic_id)
+    clinic_info = get_patient_ongoing_clinic_info(clinic_id)
     if clinic_info is None:
         return 0
     appointment_num = clinic_info['biggest_appointment_num'] + 1
@@ -351,7 +351,7 @@ def cancel_appointment(patient_id, clinic_id):
     :param str patient_id: Registered patient id
     :param str clinic_id: Registered clinic id
     """
-    clinic_info = get_ongoing_clinic_info(clinic_id)
+    clinic_info = get_patient_ongoing_clinic_info(clinic_id)
     total_appointment = clinic_info['total_appointment'] - 1
     try:
         statement = f"DELETE FROM appointment_base WHERE patient_id = '{patient_id}' AND clinic_id = '{clinic_id}'"
@@ -427,17 +427,17 @@ def get_patient_appointment_with_clinic_id_and_appointment_num(clinic_id, appoin
         return {'have_appointment': False}
 
 
-def get_undone_clinic_ids(patient_id):
-    """Check patient appointment with patient_id
+def get_patient_undone_clinic_ids(patient_id):
+    """Check patient undone appointment with clinic id.
 
     :param str patient_id: Registered patient id
-    :rtype: dict
+    :rtype: list
     """
-    clinic_ids = []
     try:
         connection.autocommit = True
         statement = f"SELECT clinic_id FROM appointment_base WHERE patient_id = '{patient_id}' AND end_time is NULL"
         cursor.execute(statement)
+        clinic_ids = []
         for result in cursor:
             clinic_ids.append(result[0])
         return clinic_ids
@@ -449,8 +449,8 @@ def get_undone_clinic_ids(patient_id):
         return []
 
 
-def get_undone_appointment(clinic_id):
-    """Check patient appointment with clinic id.
+def get_patient_undone_appointment(clinic_id):
+    """Check patient undone appointment with clinic id.
 
     :param str clinic_id: Registered clinic id
     :rtype: dict
@@ -479,8 +479,8 @@ def get_undone_appointment(clinic_id):
         return {'have_appointment': False}
 
 
-def get_ongoing_appointment(patient_id):
-    """Get ongoing appointment.
+def get_patient_ongoing_appointment(patient_id):
+    """Get ongoing appointment of the patient with patient id.
 
     :param str patient_id: Registered patient ID
     :return: Dictionary containing the clinic ID and appointment number of the ongoing appointment
@@ -508,7 +508,7 @@ def get_ongoing_appointment(patient_id):
         return None
 
 
-def get_ongoing_clinic_info(clinic_id):
+def get_patient_ongoing_clinic_info(clinic_id):
     """Get clinic info by given clinic id.
 
     :param str clinic_id: Given clinic id
@@ -546,7 +546,7 @@ def get_ongoing_clinic_info(clinic_id):
 
 
 def get_unstarted_patient_reservation_appointments(patient_id):
-    """Get patient reservation list.
+    """Get patient reservation list with patient id.
 
     :param str patient_id: Registered patient ID
     :return: Dictionary containing the clinic ID and appointment number of the ongoing appointment
