@@ -429,7 +429,6 @@ def handle_message(event):
                         'clinic_id': ongoing_appointment_info['clinic_id'],
                         'appointment_num': ongoing_appointment_info['appointment_num']}
         messages_to_send_to_frontend.append(json_to_send)
-        print('???')
         reply_message = '報到成功'
         line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
@@ -451,6 +450,19 @@ def from_backend():
                        f"預約號碼: {action_info['appointment_num']}\n" \
                        f"------------------------\n" \
                        f"請務必準時前往就醫，謝謝!"
+        line_bot_api.push_message(line_id, TextSendMessage(text=push_message))
+        return 'OK', 200
+    if post_data.get('action') == 'cancel_appointment':
+        action_info = post_data.get('action_info')
+        push_message = f"您好，{patient_name}\n" \
+                       f"您已取消先前預約的看診\n" \
+                       f"以下為您取消的預約資訊\n" \
+                       f"------------------------\n" \
+                       f"預約日期: {action_info['date']}\n" \
+                       f"預約時段: {action_info['time_period']}\n" \
+                       f"預約醫生: {action_info['doc_name']}\n" \
+                       f"------------------------\n" \
+                       f"若有任何問題請洽客服諮詢! "
         line_bot_api.push_message(line_id, TextSendMessage(text=push_message))
         return 'OK', 200
     if post_data.get('action') == 'notify_appointment':

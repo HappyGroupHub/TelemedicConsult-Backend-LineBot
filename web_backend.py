@@ -147,6 +147,11 @@ def cancel_appointment():
     patient_id = post_data['patient_id']
     clinic_id = post_data['clinic_id']
     database.cancel_appointment(patient_id, clinic_id)
+    clinic_info = database.get_clinic_info(clinic_id)
+    action_info = {'doc_name': clinic_info['doc_name'],
+                   'date': clinic_info['date'].strftime("%Y-%m-%d"),
+                   'time_period': clinic_info['time_period'], }
+    to_line(patient_id, 'cancel_appointment', **action_info)
     return jsonify(response)
 
 
