@@ -1,8 +1,13 @@
 """This is the main file of the program."""
+import json
 from datetime import datetime
 
 from flask import Flask, request, abort
 from flask.logging import create_logger
+from flask_sockets import Sockets
+from gevent import pywsgi
+from geventwebsocket.handler import WebSocketHandler
+from geventwebsocket import logging
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TemplateSendMessage, CarouselTemplate, \
@@ -32,6 +37,7 @@ def processing_tasks(line_id):
 
 
 app = Flask(__name__)
+sockets = Sockets(app)
 log = create_logger(app)
 
 
@@ -376,7 +382,7 @@ def handle_message(event):
         if len(undone_clinic_ids) == 0:
             reply_message = "您沒有任何預約"
         else:
-            reply_message = f"您這個有 {len(undone_clinic_ids)} 則預約 \n"
+            reply_message = f"您這個月的預約有 {len(undone_clinic_ids)} 則 \n"
             for clinic_id in undone_clinic_ids:
                 clinic_info = database.get_clinic_info(clinic_id)
                 undone_appointment_info = database.get_patient_undone_appointment(clinic_id)
@@ -413,6 +419,15 @@ def handle_message(event):
                             f"診間時段: {ongoing_clinic_info['time_period']}\n" \
                             f"診間醫生: {ongoing_clinic_info['doc_name']}"
         line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
+
+    if message_received == "過號報到" and not processing_tasks(line_id):
+        to_frontend({'action': 'pass_appointment_check_in'})
+        # patient_id = database.get_patient_info_by_line_id(line_id)['id']
+        # ongoing_appointment_info = database.get_ongoing_appointment(patient_id)
+        # if ongoing_appointment_info is not None:
+        #     json_to_send = {'action': 'pass_appointment_check_in'}
+        #     json_to_send.update(ongoing_appointment_info)
+        #     to_frontend(json_to_send)
 
 
 @app.route('/from_backend', methods=['POST'])
@@ -475,5 +490,25 @@ def from_backend():
         abort(400)
 
 
+ws_frontend = None
+
+
+@sockets.route('/connect')
+def connect_socket(ws):
+    global ws_frontend
+    ws_frontend = ws
+    while not ws.closed:
+        ws.receive()
+
+
+def to_frontend(**forward_json):
+    global ws_frontend
+    ws_frontend.send(json.dumps(forward_json))
+
+
 if __name__ == "__main__":
-    app.run(port=config.get('line_port'))
+    app.logger.setLevel(logging.DEBUG)
+    app.logger.debug("Flask app running...")
+
+    server = pywsgi.WSGIServer(('localhost', config.get('line_port')), app, handler_class=WebSocketHandler)
+    server.serve_forever()
