@@ -1,8 +1,9 @@
 """This is the main file of the program."""
 import json
+import time
 from datetime import datetime
 
-from flask import Flask, request, abort
+from flask import Flask, request, abort, Response
 from flask.logging import create_logger
 from flask_sockets import Sockets
 from gevent import pywsgi
@@ -25,6 +26,8 @@ want_register = {}
 want_re_register = {}
 temp_register_id = {}
 temp_register_birthday = {}
+messages_to_send_to_frontend = []
+
 
 
 def processing_tasks(line_id):
@@ -421,7 +424,7 @@ def handle_message(event):
         line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
     if message_received == "過號報到" and not processing_tasks(line_id):
-        to_frontend({'action': 'pass_appointment_check_in'})
+        messages_to_send_to_frontend.append({'action': 'pass_appointment_check_in'})
         # patient_id = database.get_patient_info_by_line_id(line_id)['id']
         # ongoing_appointment_info = database.get_ongoing_appointment(patient_id)
         # if ongoing_appointment_info is not None:
@@ -490,20 +493,38 @@ def from_backend():
         abort(400)
 
 
-ws_frontend = None
+# ws_frontend = None
+#
+#
+# @sockets.route('/ws_connect')
+# def connect_socket(ws):
+#     global ws_frontend
+#     ws_frontend = ws
+#     while not ws.closed:
+#         ws.receive()
+
+def event_stream():
+    while True:
+        if messages_to_send_to_frontend:
+            message = messages_to_send_to_frontend.pop(0)
+            yield f"data: {json.dumps(message)}\n\n"
+        time.sleep(1)  # to prevent CPU-intensive loop
 
 
-@sockets.route('/connect')
-def connect_socket(ws):
-    global ws_frontend
-    ws_frontend = ws
-    while not ws.closed:
-        ws.receive()
+@app.route('/stream')
+def stream():
+    return Response(event_stream(), mimetype="text/event-stream")
 
 
-def to_frontend(**forward_json):
-    global ws_frontend
-    ws_frontend.send(json.dumps(forward_json))
+# def to_frontend(forward_json):
+#     global ws_frontend
+#     if ws_frontend is None:
+#         print("WebSocket not connected")
+#         return
+#     if ws_frontend.closed:
+#         print("WebSocket connection closed")
+#         return
+#     ws_frontend.send(json.dumps(forward_json))
 
 
 if __name__ == "__main__":
