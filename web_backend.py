@@ -1,3 +1,5 @@
+import time
+
 import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -102,6 +104,7 @@ def get_clinic_info():
 
 @app.route('/update_clinic_status', methods=['GET', 'POST'])
 def update_clinic_status():
+    time.sleep(1.5)
     response = {'status': 'success'}
     post_data = request.get_json()
     clinic_id = post_data['clinic_id']
@@ -218,6 +221,7 @@ def next_appointment():
     current_appointment_num = post_data['current_appointment_num']
     next_appointment_num = post_data['next_appointment_num']
     notify_appointment_num = post_data['notify_appointment_num']
+    time.sleep(0.5)
     if current_appointment_num is not None or current_appointment_num != 0:
         database.update_appointment_end_time_to_now(clinic_id, current_appointment_num)
     if next_appointment_num is not None:
@@ -265,6 +269,17 @@ def pass_appointment():
                    'time_period': clinic_info['time_period'],
                    'appointment_num': appointment_num}
     to_line(patient_id, 'pass_appointment', **action_info)
+    return jsonify(response)
+
+
+@app.route('/clear_pass_appointment_time', methods=['GET', 'POST'])
+def clear_pass_appointment_time():
+    response = {'status': 'success'}
+    post_data = request.get_json()
+    clinic_id = post_data['clinic_id']
+    appointment_num = post_data['appointment_num']
+    time.sleep(1)
+    database.clear_appointment_start_time_end_time(clinic_id, appointment_num)
     return jsonify(response)
 
 

@@ -422,13 +422,16 @@ def handle_message(event):
         line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
     if message_received == "過號報到" and not processing_tasks(line_id):
-        messages_to_send_to_frontend.append({'action': 'pass_appointment_check_in'})
-        # patient_id = database.get_patient_info_by_line_id(line_id)['id']
-        # ongoing_appointment_info = database.get_ongoing_appointment(patient_id)
+        patient_id = database.get_patient_info_by_line_id(line_id)['id']
+        ongoing_appointment_info = database.get_patient_ongoing_appointment(patient_id)
         # if ongoing_appointment_info is not None:
-        #     json_to_send = {'action': 'pass_appointment_check_in'}
-        #     json_to_send.update(ongoing_appointment_info)
-        #     to_frontend(json_to_send)
+        json_to_send = {'action': 'pass_appointment_check_in', 'patient_id': patient_id,
+                        'clinic_id': ongoing_appointment_info['clinic_id'],
+                        'appointment_num': ongoing_appointment_info['appointment_num']}
+        messages_to_send_to_frontend.append(json_to_send)
+        print('???')
+        reply_message = '報到成功'
+        line_bot_api.reply_message(reply_token, TextSendMessage(text=reply_message))
 
 
 @app.route('/from_backend', methods=['POST'])
@@ -470,7 +473,7 @@ def from_backend():
                        f"您預約於{action_info['date']}的線上門診已經輪到你看診囉!\n" \
                        f"請盡速點擊以下的連結進入診間!" \
                        f"\n" \
-                       f"{action_info['link']}" \
+                       f"{action_info['link']}\n" \
                        f"------------------------\n" \
                        f"預約日期: {action_info['date']}\n" \
                        f"預約時段: {action_info['time_period']}\n" \
@@ -487,6 +490,7 @@ def from_backend():
                        f"屆時會再傳送提醒訊息!\n" \
                        f"請務必留意並準時進入診間，謝謝!"
         line_bot_api.push_message(line_id, TextSendMessage(text=push_message))
+        return 'OK', 200
     else:
         abort(400)
 
@@ -494,6 +498,7 @@ def from_backend():
 def event_stream():
     while True:
         if messages_to_send_to_frontend:
+            print(f'Adding values {messages_to_send_to_frontend}')
             message = messages_to_send_to_frontend.pop(0)
             yield f"data: {json.dumps(message)}\n\n"
         time.sleep(1)  # to prevent CPU-intensive loop
@@ -501,7 +506,6 @@ def event_stream():
 
 @app.route('/stream')
 def stream():
-    print(f'Giving {messages_to_send_to_frontend}')
     return Response(event_stream(), mimetype="text/event-stream")
 
 

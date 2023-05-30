@@ -486,26 +486,29 @@ def get_patient_ongoing_appointment(patient_id):
     :return: Dictionary containing the clinic ID and appointment number of the ongoing appointment
     :rtype: dict
     """
-    try:
-        statement = f"SELECT * FROM appointment_base WHERE patient_id = '{patient_id}' AND " \
-                    f"DATE(start_time) = CURDATE() AND end_time IS NULL"
-        cursor.execute(statement)
-        ongoing_appointment_info = cursor.fetchone()
-
-        if ongoing_appointment_info:
-            return {
-                'clinic_id': ongoing_appointment_info[3],
-                'appointment_num': ongoing_appointment_info[4],
-            }
-        else:
+    clinic_ids = get_patient_undone_clinic_ids(patient_id)
+    for clinic_id in clinic_ids:
+        try:
+            connection.autocommit = True
+            statement = f"SELECT start_time FROM clinic_base WHERE clinic_id = '{clinic_id}'"
+            cursor.execute(statement)
+            start_time = None
+            for result in cursor:
+                start_time = result[0]
+            if start_time is not None:
+                appointment_info = get_patient_appointment_with_clinic_id(patient_id, clinic_id)
+                return {
+                    'clinic_id': clinic_id,
+                    'appointment_num': appointment_info['appointment_num']
+                }
+            else:
+                return None
+        except (TypeError, UnboundLocalError):
+            print("Error retrieving entry from the database, no matching results")
             return None
-
-    except (TypeError, UnboundLocalError):
-        print("Error retrieving entry from the database, no matching results")
-        return None
-    except database.errors as error:
-        print(f"Error retrieving entry from the database: {error}")
-        return None
+        except database.errors as error:
+            print(f"Error retrieving entry from the database: {error}")
+            return None
 
 
 def get_patient_ongoing_clinic_info(clinic_id):
@@ -692,6 +695,22 @@ def update_appointment_end_time_to_now(clinic_id, appointment_num):
     """
     try:
         statement = f"UPDATE appointment_base SET end_time = '{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}' WHERE clinic_id = '{clinic_id}' AND appointment_num = '{appointment_num}'"
+        cursor.execute(statement)
+        connection.commit()
+    except (TypeError, UnboundLocalError):
+        print("Error updating entry from database, no matching results")
+    except database.errors as error:
+        print(f"Error updating entry from database: {error}")
+
+
+def clear_appointment_start_time_end_time(clinic_id, appointment_num):
+    """Set appointment start time and end time to NULL.
+
+    :param str clinic_id: Registered clinic id
+    :param str appointment_num: Registered appointment number
+    """
+    try:
+        statement = f"UPDATE appointment_base SET start_time = NULL, end_time = NULL WHERE clinic_id = '{clinic_id}' AND appointment_num = '{appointment_num}'"
         cursor.execute(statement)
         connection.commit()
     except (TypeError, UnboundLocalError):
