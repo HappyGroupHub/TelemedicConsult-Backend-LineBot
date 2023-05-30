@@ -5,9 +5,7 @@ from datetime import datetime
 
 from flask import Flask, request, abort, Response
 from flask.logging import create_logger
-from flask_sockets import Sockets
-from gevent import pywsgi
-from geventwebsocket.handler import WebSocketHandler
+from flask_cors import CORS
 from geventwebsocket import logging
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
@@ -29,7 +27,6 @@ temp_register_birthday = {}
 messages_to_send_to_frontend = []
 
 
-
 def processing_tasks(line_id):
     """Check if there are any tasks' user is processing.
 
@@ -40,7 +37,7 @@ def processing_tasks(line_id):
 
 
 app = Flask(__name__)
-sockets = Sockets(app)
+CORS(app)
 log = create_logger(app)
 
 
@@ -414,7 +411,8 @@ def handle_message(event):
                             f"預約號碼: {undone_appointment_info['appointment_num']}"
 
         else:
-            ongoing_clinic_info = database.get_patient_ongoing_clinic_info(ongoing_appointment_info['clinic_id'])
+            ongoing_clinic_info = database.get_patient_ongoing_clinic_info(
+                ongoing_appointment_info['clinic_id'])
             reply_message = f"目前看診進度 : {ongoing_clinic_info['progress']} 號 \n" \
                             f"您的號碼 : {ongoing_appointment_info['appointment_num']} 號 \n" \
                             "---------------------------- \n" \
@@ -493,16 +491,6 @@ def from_backend():
         abort(400)
 
 
-# ws_frontend = None
-#
-#
-# @sockets.route('/ws_connect')
-# def connect_socket(ws):
-#     global ws_frontend
-#     ws_frontend = ws
-#     while not ws.closed:
-#         ws.receive()
-
 def event_stream():
     while True:
         if messages_to_send_to_frontend:
@@ -513,23 +501,11 @@ def event_stream():
 
 @app.route('/stream')
 def stream():
+    print(f'Giving {messages_to_send_to_frontend}')
     return Response(event_stream(), mimetype="text/event-stream")
 
 
-# def to_frontend(forward_json):
-#     global ws_frontend
-#     if ws_frontend is None:
-#         print("WebSocket not connected")
-#         return
-#     if ws_frontend.closed:
-#         print("WebSocket connection closed")
-#         return
-#     ws_frontend.send(json.dumps(forward_json))
-
-
 if __name__ == "__main__":
+    app.run(port=config.get('line_port'), debug=True, threaded=True)
     app.logger.setLevel(logging.DEBUG)
     app.logger.debug("Flask app running...")
-
-    server = pywsgi.WSGIServer(('localhost', config.get('line_port')), app, handler_class=WebSocketHandler)
-    server.serve_forever()
