@@ -1,23 +1,30 @@
 import time
 
 import requests
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+import uvicorn
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 
 import database
 import utilities as utils
 
-app = Flask(__name__)
+app = FastAPI()
+origins = ["*"]
 
-CORS(app, resources={r"/*": {"origins": "*"}})
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"], )
 
-linebot_port = utils.read_config()['line_port']
+config = utils.read_config()
 
 
-@app.route('/register_patient', methods=['GET', 'POST'])
-def register_patient():
+@app.post('/register_patient')
+async def register_patient(request: Request):
+    post_data = await request.json()
     response = {'status': 'success'}
-    post_data = request.get_json()
     name = post_data['name']
     id = post_data['id']
     sex = post_data['sex']
@@ -33,38 +40,38 @@ def register_patient():
     database.register_patient(name, id, sex, birthday, blood_type, phone_number,
                               address, height, weight, ice_contact, ice_relation, ice_phone)
     response['message'] = 'Patient registered successfully'
-    return jsonify(response)
+    return response
 
 
-@app.route('/get_patient_info_by_id', methods=['GET', 'POST'])
-def get_patient_info_by_id():
+@app.post('/get_patient_info_by_id')
+async def get_patient_info_by_id(request: Request):
+    post_data = await request.json()
     response = {'status': 'success'}
-    post_data = request.get_json()
     patient_id = post_data['id']
     patient_info = database.get_patient_info_by_id(patient_id)
     if 'birthday' in patient_info:
         patient_info['birthday'] = patient_info['birthday'].strftime("%Y-%m-%d")
     response.update(patient_info)
-    return jsonify(response)
+    return response
 
 
-@app.route('/if_patient_registered_line', methods=['GET', 'POST'])
-def if_patient_registered_line():
+@app.post('/if_patient_registered_line')
+async def if_patient_registered_line(request: Request):
+    post_data = await request.json()
     response = {'status': 'success'}
-    post_data = request.get_json()
     patient_id = post_data['id']
     patient_info = database.get_patient_info_by_id(patient_id)
     if patient_info['line_id'] is None or patient_info['line_id'] == '':
         response['registered'] = False
     else:
         response['registered'] = True
-    return jsonify(response)
+    return response
 
 
-@app.route('/update_patient_info_by_id', methods=['GET', 'POST'])
-def update_patient_info_by_id():
+@app.post('/update_patient_info_by_id')
+async def update_patient_info_by_id(request: Request):
+    post_data = await request.json()
     response = {'status': 'success'}
-    post_data = request.get_json()
     patient_id = post_data['id']
     phone_number = post_data['phone_number']
     address = post_data['address']
@@ -76,37 +83,37 @@ def update_patient_info_by_id():
     database.update_patient_info_by_id(patient_id, phone_number, address, height, weight,
                                        ice_contact,
                                        ice_relation, ice_phone)
-    return jsonify(response)
+    return response
 
 
-@app.route('/check_if_time_have_clinic', methods=['GET', 'POST'])
-def check_if_time_have_clinic():
+@app.post('/check_if_time_have_clinic')
+async def check_if_time_have_clinic(request: Request):
+    post_data = await request.json()
     response = {'status': 'success'}
-    post_data = request.get_json()
     date = post_data['date']
     time_period = post_data['time_period']
     result = database.check_if_time_have_clinic(date, time_period)
     response.update(result)
-    return jsonify(response)
+    return response
 
 
-@app.route('/get_clinic_info', methods=['GET', 'POST'])
-def get_clinic_info():
+@app.post('/get_clinic_info')
+async def get_clinic_info(request: Request):
+    post_data = await request.json()
     response = {'status': 'success'}
-    post_data = request.get_json()
     clinic_id = post_data['clinic_id']
     clinic_info = database.get_clinic_info(clinic_id)
     if 'date' in clinic_info:
         clinic_info['date'] = clinic_info['date'].strftime("%Y-%m-%d")
     response.update(clinic_info)
-    return jsonify(response)
+    return response
 
 
-@app.route('/update_clinic_status', methods=['GET', 'POST'])
-def update_clinic_status():
+@app.post('/update_clinic_status')
+async def update_clinic_status(request: Request):
     time.sleep(1.5)
+    post_data = await request.json()
     response = {'status': 'success'}
-    post_data = request.get_json()
     clinic_id = post_data['clinic_id']
     status_dict = post_data['status_dict']
     database.update_clinic_status(clinic_id, **{
@@ -117,13 +124,13 @@ def update_clinic_status():
         'biggest_appointment_num': status_dict.get('biggest_appointment_num', None),
         'progress': status_dict.get('progress', None)
     })
-    return jsonify(response)
+    return response
 
 
-@app.route('/make_appointment', methods=['GET', 'POST'])
-def make_appointment():
+@app.post('/make_appointment')
+async def make_appointment(request: Request):
+    post_data = await request.json()
     response = {'status': 'success'}
-    post_data = request.get_json()
     patient_id = post_data['patient_id']
     clinic_id = post_data['clinic_id']
     if database.check_can_patient_make_appointment(patient_id, clinic_id):
@@ -133,17 +140,17 @@ def make_appointment():
                        'date': clinic_info['date'].strftime("%Y-%m-%d"),
                        'time_period': clinic_info['time_period'],
                        'appointment_num': appointment_num}
-        to_line(patient_id, 'make_appointment', **action_info)
+        await to_line(patient_id, 'make_appointment', **action_info)
         response['appointment_num'] = appointment_num
     else:
         response['appointment_num'] = 0
-    return jsonify(response)
+    return response
 
 
-@app.route('/cancel_appointment', methods=['GET', 'POST'])
-def cancel_appointment():
+@app.post('/cancel_appointment')
+async def cancel_appointment(request: Request):
+    post_data = await request.json()
     response = {'status': 'success'}
-    post_data = request.get_json()
     patient_id = post_data['patient_id']
     clinic_id = post_data['clinic_id']
     database.cancel_appointment(patient_id, clinic_id)
@@ -151,46 +158,46 @@ def cancel_appointment():
     action_info = {'doc_name': clinic_info['doc_name'],
                    'date': clinic_info['date'].strftime("%Y-%m-%d"),
                    'time_period': clinic_info['time_period'], }
-    to_line(patient_id, 'cancel_appointment', **action_info)
-    return jsonify(response)
+    await to_line(patient_id, 'cancel_appointment', **action_info)
+    return response
 
 
-@app.route('/get_patient_appointment_with_clinic_id', methods=['GET', 'POST'])
-def get_patient_appointment_with_clinic_id():
+@app.post('/get_patient_appointment_with_clinic_id')
+async def get_patient_appointment_with_clinic_id(request: Request):
+    post_data = await request.json()
     response = {'status': 'success'}
-    post_data = request.get_json()
     patient_id = post_data['patient_id']
     clinic_id = post_data['clinic_id']
     appointment_info = database.get_patient_appointment_with_clinic_id(patient_id, clinic_id)
     response.update(appointment_info)
-    return jsonify(response)
+    return response
 
 
-@app.route('/doctor_login', methods=['GET', 'POST'])
-def doctor_login():
+@app.post('/doctor_login')
+async def doctor_login(request: Request):
+    post_data = await request.json()
     response = {'status': 'success'}
-    post_data = request.get_json()
     doc_id = post_data['doc_id']
     password = post_data['password']
     doc_info = database.doctor_login(doc_id, password)
     response.update(doc_info)
-    return jsonify(response)
+    return response
 
 
-@app.route('/get_doctor_clinic_list', methods=['GET', 'POST'])
-def get_doctor_clinic_list():
+@app.post('/get_doctor_clinic_list')
+async def get_doctor_clinic_list(request: Request):
+    post_data = await request.json()
     response = {'status': 'success'}
-    post_data = request.get_json()
     doc_id = post_data['doc_id']
     clinic_list = database.get_doctor_clinic_list(doc_id)
     response['clinic_list'] = clinic_list
-    return jsonify(response)
+    return response
 
 
-@app.route('/get_patient_reservation_list', methods=['GET', 'POST'])
-def get_patient_reservation_list():
+@app.post('/get_patient_reservation_list')
+async def get_patient_reservation_list(request: Request):
+    post_data = await request.json()
     response = {'status': 'success'}
-    post_data = request.get_json()
     patient_id = post_data['patient_id']
     reservation_list = database.get_unstarted_patient_reservation_appointments(patient_id)
     for appointment in reservation_list:
@@ -198,13 +205,13 @@ def get_patient_reservation_list():
         clinic_info['date'] = clinic_info['date'].strftime("%Y-%m-%d")
         appointment['clinic_info'] = clinic_info
     response['reservation_list'] = reservation_list
-    return jsonify(response)
+    return response
 
 
-@app.route('/get_patients_by_clinic_id', methods=['GET', 'POST'])
-def get_patients_by_clinic_id():
+@app.post('/get_patients_by_clinic_id')
+async def get_patients_by_clinic_id(request: Request):
+    post_data = await request.json()
     response = {'status': 'success'}
-    post_data = request.get_json()
     clinic_id = post_data['clinic_id']
     patients = database.get_patients_by_clinic_id(clinic_id)
     patients_id = [patient['patient_id'] for patient in patients]
@@ -214,13 +221,13 @@ def get_patients_by_clinic_id():
     response['patients_name'] = patients_name
     response['appointment_nums'] = appointment_nums
     response['patients'] = patients
-    return jsonify(response)
+    return response
 
 
-@app.route('/next_appointment', methods=['GET', 'POST'])
-def next_appointment():
+@app.post('/next_appointment')
+async def next_appointment(request: Request):
+    post_data = await request.json()
     response = {'status': 'success'}
-    post_data = request.get_json()
     clinic_id = post_data['clinic_id']
     clinic_info = database.get_clinic_info(clinic_id)
     current_appointment_num = post_data['current_appointment_num']
@@ -238,11 +245,12 @@ def next_appointment():
                        'date': clinic_info['date'].strftime("%Y-%m-%d"),
                        'time_period': clinic_info['time_period'],
                        'link': clinic_info['link']}
-        to_line(patient_id, 'give_clinic_link', **action_info)
-        database.update_clinic_status(clinic_id, **{'start_time': None, 'end_time': None, 'link': None,
-                                                    'progress': next_appointment_num,
-                                                    'biggest_appointment_num': None,
-                                                    'total_appointment': None})
+        await to_line(patient_id, 'give_clinic_link', **action_info)
+        database.update_clinic_status(clinic_id,
+                                      **{'start_time': None, 'end_time': None, 'link': None,
+                                         'progress': next_appointment_num,
+                                         'biggest_appointment_num': None,
+                                         'total_appointment': None})
         database.update_appointment_start_time_to_now(clinic_id, next_appointment_num)
     if notify_appointment_num is not None:
         patient_appointment = database.get_patient_appointment_with_clinic_id_and_appointment_num(
@@ -255,14 +263,14 @@ def next_appointment():
                        'time_period': clinic_info['time_period'],
                        'appointment_num': appointment_num,
                        'next_appointment_num': next_appointment_num}
-        to_line(patient_id, 'notify_appointment', **action_info)
-    return jsonify(response)
+        await to_line(patient_id, 'notify_appointment', **action_info)
+    return response
 
 
-@app.route('/pass_appointment', methods=['GET', 'POST'])
-def pass_appointment():
+@app.post('/pass_appointment')
+async def pass_appointment(request: Request):
+    post_data = await request.json()
     response = {'status': 'success'}
-    post_data = request.get_json()
     clinic_id = post_data['clinic_id']
     clinic_info = database.get_clinic_info(clinic_id)
     appointment_num = post_data['appointment_num']
@@ -273,29 +281,29 @@ def pass_appointment():
                    'date': clinic_info['date'].strftime("%Y-%m-%d"),
                    'time_period': clinic_info['time_period'],
                    'appointment_num': appointment_num}
-    to_line(patient_id, 'pass_appointment', **action_info)
-    return jsonify(response)
+    await to_line(patient_id, 'pass_appointment', **action_info)
+    return response
 
 
-@app.route('/clear_pass_appointment_time', methods=['GET', 'POST'])
-def clear_pass_appointment_time():
+@app.post('/clear_pass_appointment_time')
+async def clear_pass_appointment_time(request: Request):
+    post_data = await request.json()
     response = {'status': 'success'}
-    post_data = request.get_json()
     clinic_id = post_data['clinic_id']
     appointment_num = post_data['appointment_num']
     time.sleep(1)
     database.clear_appointment_start_time_end_time(clinic_id, appointment_num)
-    return jsonify(response)
+    return response
 
 
-def to_line(patient_id, action, **action_info):
+async def to_line(patient_id, action, **action_info):
     patient_info = database.get_patient_info_by_id(patient_id)
     patient_name = patient_info['name']
     line_id = patient_info['line_id']
     post_data = {'patient_id': patient_id, 'patient_name': patient_name, 'line_id': line_id,
                  'action': action, 'action_info': action_info}
-    requests.post(f'http://127.0.0.1:{linebot_port}/from_backend', json=post_data)
+    requests.post(f'http://127.0.0.1:{config["line_port"]}/from_backend', json=post_data)
 
 
 if __name__ == '__main__':
-    app.run()
+    uvicorn.run(app, port=5000)
