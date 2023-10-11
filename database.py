@@ -145,8 +145,9 @@ def is_line_registered(line_id):
     """
     try:
         connection.autocommit = True
-        statement = f"SELECT is_registered FROM line_registry WHERE line_id = '{line_id}'"
-        cursor.execute(statement)
+        line_id = database.conversion.MySQLConverter().escape(line_id)
+        statement = f"SELECT is_registered FROM line_registry WHERE line_id = %s"
+        cursor.execute(statement, (line_id,))
         for result in cursor:
             is_registered = result
         return list(is_registered)[0]
