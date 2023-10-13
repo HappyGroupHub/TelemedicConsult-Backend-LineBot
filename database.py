@@ -17,12 +17,14 @@ connection = database.connect(
 cursor = connection.cursor()
 
 
-def register_patient(name, id, sex, birthday, blood_type, phone_number, address,
-                     height, weight,
-                     ice_contact, ice_relation, ice_phone):
+def register_patient(name, id, sex, birthday, blood_type, phone_number, address, height, weight, ice_contact,
+                     ice_relation, ice_phone):
     try:
-        statement = f"INSERT INTO patient_base (name, id, sex, birthday, blood_type, phone_number, address, height, weight, ice_contact, ice_relation, ice_phone) VALUE ('{name}', '{id}', '{sex}', '{birthday}', '{blood_type}', '{phone_number}', '{address}', '{height}', '{weight}', '{ice_contact}', '{ice_relation}', '{ice_phone}')"
-        cursor.execute(statement)
+        statement = "INSERT INTO patient_base (name, id, sex, birthday, blood_type, phone_number, address, height, weight, ice_contact, ice_relation, ice_phone) " \
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        values = (name, id, sex, birthday, blood_type, phone_number, address, height, weight, ice_contact, ice_relation,
+                  ice_phone)
+        cursor.execute(statement, values)
         connection.commit()
     except database.errors as error:
         print(f"Error creating patients to database: {error}")
@@ -30,14 +32,13 @@ def register_patient(name, id, sex, birthday, blood_type, phone_number, address,
 
 def get_patient_info_by_id(patient_id):
     """Get patient info by patient id.
-
     :param str patient_id: Registered patient id
     :rtype: dict
     """
     try:
         connection.autocommit = True
-        statement = f"SELECT * FROM patient_base WHERE id = '{patient_id}'"
-        cursor.execute(statement)
+        statement = "SELECT * FROM patient_base WHERE id = %s"
+        cursor.execute(statement, (patient_id,))
         for result in cursor:
             results = result
         patient_info = {
@@ -73,8 +74,8 @@ def get_patient_info_by_line_id(line_id):
     """
     try:
         connection.autocommit = True
-        statement = f"SELECT * FROM patient_base WHERE line_id = '{line_id}'"
-        cursor.execute(statement)
+        statement = "SELECT * FROM patient_base WHERE line_id = %s"
+        cursor.execute(statement, (line_id,))
         for result in cursor:
             results = result
         patient_info = {
@@ -109,11 +110,12 @@ def update_patient_line_id(patient_id, line_id):
     :param str line_id: Registered line id
     """
     try:
-        statement = f"UPDATE patient_base SET line_id = '{line_id}' WHERE id = '{patient_id}'"
-        cursor.execute(statement)
+        statement = "UPDATE patient_base SET line_id = %s WHERE id = %s"
+        values = (line_id, patient_id)
+        cursor.execute(statement, values)
         connection.commit()
     except database.errors as error:
-        print(f"Error retrieving entry from database: {error}")
+        print(f"Error updating entry in the database: {error}")
 
 
 def update_patient_info_by_id(patient_id, phone_number, address, height, weight, ice_contact,
@@ -130,11 +132,12 @@ def update_patient_info_by_id(patient_id, phone_number, address, height, weight,
     :param str patient_id: Registered patient id
     """
     try:
-        statement = f"UPDATE patient_base SET phone_number = '{phone_number}', address = '{address}', height = '{height}', weight = '{weight}', ice_contact = '{ice_contact}', ice_relation = '{ice_relation}', ice_phone = '{ice_phone}' WHERE id = '{patient_id}'"
-        cursor.execute(statement)
+        statement = "UPDATE patient_base SET phone_number = %s, address = %s, height = %s, weight = %s, ice_contact = %s, ice_relation = %s, ice_phone = %s WHERE id = %s"
+        values = (phone_number, address, height, weight, ice_contact, ice_relation, ice_phone, patient_id)
+        cursor.execute(statement, values)
         connection.commit()
     except database.errors as error:
-        print(f"Error retrieving entry from database: {error}")
+        print(f"Error updating entry in the database: {error}")
 
 
 def is_line_registered(line_id):
@@ -170,8 +173,9 @@ def create_line_registry(line_id, is_registered=False):
     :param bool is_registered: to registered or not (should be false by default)
     """
     try:
-        statement = f"INSERT INTO line_registry (line_id, is_registered) VALUE ('{line_id}', {is_registered})"
-        cursor.execute(statement)
+        statement = "INSERT INTO line_registry (line_id, is_registered) VALUE (%s, %s)"
+        values = (line_id, is_registered)
+        cursor.execute(statement, values)
         connection.commit()
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
@@ -184,8 +188,9 @@ def update_line_registry(line_id, is_registered):
     :param bool is_registered: to registered or not
     """
     try:
-        statement = f"UPDATE line_registry SET is_registered = {is_registered} WHERE line_id = '{line_id}'"
-        cursor.execute(statement)
+        statement = "UPDATE line_registry SET is_registered = %s WHERE line_id = %s"
+        values = (is_registered, line_id)
+        cursor.execute(statement, values)
         connection.commit()
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
@@ -200,8 +205,8 @@ def check_if_time_have_clinic(date, time_period):
     """
     try:
         connection.autocommit = True
-        statement = f"SELECT clinic_id FROM clinic_base WHERE date = '{date}' AND time_period = '{time_period}'"
-        cursor.execute(statement)
+        statement = "SELECT clinic_id FROM clinic_base WHERE date = %s AND time_period = %s"
+        cursor.execute(statement, (date, time_period))
         for result in cursor:
             clinic_id = result
             return {'have_clinic': True, 'clinic_id': list(clinic_id)[0]}
@@ -222,8 +227,8 @@ def get_clinic_info(clinic_id):
     """
     try:
         connection.autocommit = True
-        statement = f"SELECT * FROM clinic_base WHERE clinic_id = '{clinic_id}'"
-        cursor.execute(statement)
+        statement = "SELECT * FROM clinic_base WHERE clinic_id = %s"
+        cursor.execute(statement, (clinic_id,))
         for result in cursor:
             clinic_info = result
         return {
@@ -251,50 +256,20 @@ def update_clinic_status(clinic_id, **status_dict):
     """Update clinic status.
 
     :param str clinic_id: Registered clinic id
-    :param dict status_dict: Clinic status dictionary, including start_time, end_time, link and progress
+    :param dict status_dict: Clinic status dictionary, including start_time, end_time, link, total_appointment, biggest_appointment_num, and progress
     """
-    if status_dict['start_time'] is not None:
-        try:
-            statement = f"UPDATE clinic_base SET start_time = '{status_dict['start_time']}' WHERE clinic_id = '{clinic_id}'"
-            cursor.execute(statement)
-            connection.commit()
-        except database.errors as error:
-            print(f"Error retrieving entry from database: {error}")
-    if status_dict['end_time'] is not None:
-        try:
-            statement = f"UPDATE clinic_base SET end_time = '{status_dict['end_time']}' WHERE clinic_id = '{clinic_id}'"
-            cursor.execute(statement)
-            connection.commit()
-        except database.errors as error:
-            print(f"Error retrieving entry from database: {error}")
-    if status_dict['link'] is not None:
-        try:
-            statement = f"UPDATE clinic_base SET link = '{status_dict['link']}' WHERE clinic_id = '{clinic_id}'"
-            cursor.execute(statement)
-            connection.commit()
-        except database.errors as error:
-            print(f"Error retrieving entry from database: {error}")
-    if status_dict['total_appointment'] is not None:
-        try:
-            statement = f"UPDATE clinic_base SET total_appointment = '{status_dict['total_appointment']}' WHERE clinic_id = '{clinic_id}'"
-            cursor.execute(statement)
-            connection.commit()
-        except database.errors as error:
-            print(f"Error retrieving entry from database: {error}")
-    if status_dict['biggest_appointment_num'] is not None:
-        try:
-            statement = f"UPDATE clinic_base SET biggest_appointment_num = '{status_dict['biggest_appointment_num']}' WHERE clinic_id = '{clinic_id}'"
-            cursor.execute(statement)
-            connection.commit()
-        except database.errors as error:
-            print(f"Error retrieving entry from database: {error}")
-    if status_dict['progress'] is not None:
-        try:
-            statement = f"UPDATE clinic_base SET progress = '{status_dict['progress']}' WHERE clinic_id = '{clinic_id}'"
-            cursor.execute(statement)
-            connection.commit()
-        except database.errors as error:
-            print(f"Error retrieving entry from database: {error}")
+    try:
+        # Define a list of columns to update
+        columns = ["start_time", "end_time", "link", "total_appointment", "biggest_appointment_num", "progress"]
+
+        for column in columns:
+            if column in status_dict and status_dict[column] is not None:
+                statement = f"UPDATE clinic_base SET {column} = %s WHERE clinic_id = %s"
+                cursor.execute(statement, (status_dict[column], clinic_id))
+
+        connection.commit()
+    except database.errors as error:
+        print(f"Error updating clinic status in the database: {error}")
 
 
 def check_can_patient_make_appointment(patient_id, clinic_id):
@@ -306,8 +281,8 @@ def check_can_patient_make_appointment(patient_id, clinic_id):
     """
     try:
         connection.autocommit = True
-        statement = f"SELECT * FROM appointment_base WHERE patient_id = '{patient_id}' AND clinic_id = '{clinic_id}'"
-        cursor.execute(statement)
+        statement = "SELECT * FROM appointment_base WHERE patient_id = %s AND clinic_id = %s"
+        cursor.execute(statement, (patient_id, clinic_id))
         for result in cursor:
             return False
         return True
@@ -333,8 +308,9 @@ def make_appointment(clinic_id, patient_id):
     appointment_num = clinic_info['biggest_appointment_num'] + 1
     total_appointment = clinic_info['total_appointment'] + 1
     try:
-        statement = f"INSERT INTO appointment_base (clinic_id, patient_id, patient_name, appointment_num) VALUE ('{clinic_id}', '{patient_id}', '{patient_name}', {appointment_num})"
-        cursor.execute(statement)
+        statement = "INSERT INTO appointment_base (clinic_id, patient_id, patient_name, appointment_num) VALUE (%s, %s, %s, %s)"
+        values = (clinic_id, patient_id, patient_name, appointment_num)
+        cursor.execute(statement, values)
         connection.commit()
         update_clinic_status(clinic_id,
                              **{'start_time': None, 'end_time': None, 'link': None,
@@ -355,8 +331,8 @@ def cancel_appointment(patient_id, clinic_id):
     clinic_info = get_patient_ongoing_clinic_info(clinic_id)
     total_appointment = clinic_info['total_appointment'] - 1
     try:
-        statement = f"DELETE FROM appointment_base WHERE patient_id = '{patient_id}' AND clinic_id = '{clinic_id}'"
-        cursor.execute(statement)
+        statement = "DELETE FROM appointment_base WHERE patient_id = %s AND clinic_id = %s"
+        cursor.execute(statement, (patient_id, clinic_id))
         connection.commit()
         update_clinic_status(clinic_id,
                              **{'start_time': None, 'end_time': None, 'link': None,
@@ -368,15 +344,14 @@ def cancel_appointment(patient_id, clinic_id):
 
 def get_patient_appointment_with_clinic_id(patient_id, clinic_id):
     """Check patient appointment with clinic id.
-
     :param str patient_id: Registered patient id
     :param str clinic_id: Registered clinic id
     :rtype: dict
     """
     try:
         connection.autocommit = True
-        statement = f"SELECT * FROM appointment_base WHERE patient_id = '{patient_id}' AND clinic_id = '{clinic_id}'"
-        cursor.execute(statement)
+        statement = "SELECT * FROM appointment_base WHERE patient_id = %s AND clinic_id = %s"
+        cursor.execute(statement, (patient_id, clinic_id))
         for result in cursor:
             appointment_info = result
         return {
@@ -405,24 +380,23 @@ def get_patient_appointment_with_clinic_id_and_appointment_num(clinic_id, appoin
     :rtype: dict
     """
     try:
-        connection.autocommit = True
-        statement = f"SELECT * FROM appointment_base WHERE clinic_id = '{clinic_id}' AND appointment_num = '{appointment_num}'"
-        cursor.execute(statement)
-        for result in cursor:
-            appointment_info = result
-        return {
-            'have_appointment': True,
-            'order_id': appointment_info[0],
-            'patient_id': appointment_info[1],
-            'patient_name': appointment_info[2],
-            'clinic_id': appointment_info[3],
-            'appointment_num': appointment_info[4],
-            'start_time': appointment_info[5],
-            'end_time': appointment_info[6],
-        }
-    except (TypeError, UnboundLocalError):
-        print("Error retrieving entry from database, no matching results")
-        return {'have_appointment': False}
+        statement = "SELECT * FROM appointment_base WHERE clinic_id = %s AND appointment_num = %s"
+        cursor.execute(statement, (clinic_id, appointment_num))
+        result = cursor.fetchone()
+
+        if result:
+            return {
+                'have_appointment': True,
+                'order_id': result[0],
+                'patient_id': result[1],
+                'patient_name': result[2],
+                'clinic_id': result[3],
+                'appointment_num': result[4],
+                'start_time': result[5],
+                'end_time': result[6],
+            }
+        else:
+            return {'have_appointment': False}
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
         return {'have_appointment': False}
@@ -435,48 +409,43 @@ def get_patient_undone_clinic_ids(patient_id):
     :rtype: list
     """
     try:
-        connection.autocommit = True
-        statement = f"SELECT clinic_id FROM appointment_base WHERE patient_id = '{patient_id}' AND end_time is NULL"
-        cursor.execute(statement)
-        clinic_ids = []
-        for result in cursor:
-            clinic_ids.append(result[0])
+        statement = "SELECT clinic_id FROM appointment_base WHERE patient_id = %s AND end_time IS NULL"
+        cursor.execute(statement, (patient_id,))
+        clinic_ids = [result[0] for result in cursor.fetchall()]
         return clinic_ids
-    except (TypeError, UnboundLocalError):
-        print("Error retrieving entry from database, no matching results")
-        return []
     except database.errors as error:
         print(f"Error retrieving entry from database: {error}")
         return []
 
 
 def get_patient_undone_appointment(clinic_id):
-    """Check patient undone appointment with clinic id.
+    """Check if a patient has an undone appointment with a specific clinic ID.
 
-    :param str clinic_id: Registered clinic id
+    :param str clinic_id: Clinic ID
+    :return: Dictionary with appointment information or {'have_appointment': False} if no matching result
     :rtype: dict
     """
     try:
-        connection.autocommit = True
-        statement = f"SELECT * FROM appointment_base WHERE clinic_id = '{clinic_id}'AND end_time is NULL"
-        cursor.execute(statement)
-        for result in cursor:
-            appointment_info = result
-        return {
-            'have_appointment': True,
-            'order_id': appointment_info[0],
-            'patient_id': appointment_info[1],
-            'patient_name': appointment_info[2],
-            'clinic_id': appointment_info[3],
-            'appointment_num': appointment_info[4],
-            'start_time': appointment_info[5],
-            'end_time': appointment_info[6],
-        }
-    except (TypeError, UnboundLocalError):
-        print("Error retrieving entry from database, no matching results")
-        return {'have_appointment': False}
+        statement = "SELECT * FROM appointment_base WHERE clinic_id = %s AND end_time IS NULL"
+        cursor.execute(statement, (clinic_id,))
+        appointment_info = cursor.fetchone()
+
+        if appointment_info:
+            return {
+                'have_appointment': True,
+                'order_id': appointment_info[0],
+                'patient_id': appointment_info[1],
+                'patient_name': appointment_info[2],
+                'clinic_id': appointment_info[3],
+                'appointment_num': appointment_info[4],
+                'start_time': appointment_info[5],
+                'end_time': appointment_info[6],
+            }
+        else:
+            return {'have_appointment': False}
+
     except database.errors as error:
-        print(f"Error retrieving entry from database: {error}")
+        print(f"Error retrieving entry from the database: {error}")
         return {'have_appointment': False}
 
 
@@ -484,44 +453,39 @@ def get_patient_ongoing_appointment(patient_id):
     """Get ongoing appointment of the patient with patient id.
 
     :param str patient_id: Registered patient ID
-    :return: Dictionary containing the clinic ID and appointment number of the ongoing appointment
-    :rtype: dict
+    :return: Dictionary containing the clinic ID and appointment number of the ongoing appointment, or None if there's no ongoing appointment
+    :rtype: dict or None
     """
     clinic_ids = get_patient_undone_clinic_ids(patient_id)
+
     for clinic_id in clinic_ids:
         try:
-            connection.autocommit = True
-            statement = f"SELECT start_time FROM clinic_base WHERE clinic_id = '{clinic_id}'"
-            cursor.execute(statement)
-            start_time = None
-            for result in cursor:
-                start_time = result[0]
+            statement = "SELECT start_time FROM clinic_base WHERE clinic_id = %s"
+            cursor.execute(statement, (clinic_id,))
+            start_time = cursor.fetchone()
+
             if start_time is not None:
                 appointment_info = get_patient_appointment_with_clinic_id(patient_id, clinic_id)
                 return {
                     'clinic_id': clinic_id,
                     'appointment_num': appointment_info['appointment_num']
                 }
-            else:
-                return None
-        except (TypeError, UnboundLocalError):
-            print("Error retrieving entry from the database, no matching results")
-            return None
         except database.errors as error:
             print(f"Error retrieving entry from the database: {error}")
-            return None
+
+    return None
 
 
 def get_patient_ongoing_clinic_info(clinic_id):
-    """Get clinic info by given clinic id.
+    """Get information about an ongoing clinic by clinic ID.
 
-    :param str clinic_id: Given clinic id
-    :return: Dictionary containing the clinic information
-    :rtype: dict
+    :param str clinic_id: Clinic ID
+    :return: Dictionary containing clinic information or None if no ongoing clinic found
+    :rtype: dict or None
     """
     try:
-        statement = f"SELECT * FROM clinic_base WHERE clinic_id = '{clinic_id}' AND end_time IS NULL "
-        cursor.execute(statement)
+        statement = "SELECT * FROM clinic_base WHERE clinic_id = %s AND end_time IS NULL"
+        cursor.execute(statement, (clinic_id,))
         ongoing_clinic_info = cursor.fetchone()
 
         if ongoing_clinic_info:
@@ -541,29 +505,23 @@ def get_patient_ongoing_clinic_info(clinic_id):
         else:
             return None
 
-    except (TypeError, UnboundLocalError):
-        print("Error retrieving entry from the database, no matching results")
-        return None
     except database.errors as error:
         print(f"Error retrieving entry from the database: {error}")
         return None
 
 
 def get_unstarted_patient_reservation_appointments(patient_id):
-    """Get patient reservation list with patient id.
+    """Get a list of patient's unstarted reservation appointments.
 
     :param str patient_id: Registered patient ID
-    :return: Dictionary containing the clinic ID and appointment number of the ongoing appointment
+    :return: List of dictionaries containing appointment information or an empty list if no matching results
     :rtype: list
     """
     reservation_list = []
     try:
-        connection.autocommit = True
-        statement = f"SELECT * FROM appointment_base WHERE patient_id = '{patient_id}' AND " \
-                    f"DATE(end_time) IS NULL"
-        cursor.execute(statement)
-        for result in cursor:
-            appointment_info = result
+        statement = "SELECT * FROM appointment_base WHERE patient_id = %s AND end_time IS NULL"
+        cursor.execute(statement, (patient_id,))
+        for appointment_info in cursor:
             reservation_list.append({
                 'have_appointment': True,
                 'order_id': appointment_info[0],
@@ -575,12 +533,9 @@ def get_unstarted_patient_reservation_appointments(patient_id):
                 'end_time': appointment_info[6],
             })
         return reservation_list
-    except (TypeError, UnboundLocalError):
-        print("Error retrieving entry from the database, no matching results")
-        return None
     except database.errors as error:
         print(f"Error retrieving entry from the database: {error}")
-        return None
+        return []
 
 
 def doctor_login(doc_id, password):
@@ -592,8 +547,8 @@ def doctor_login(doc_id, password):
     """
     try:
         connection.autocommit = True
-        statement = f"SELECT * FROM doctor_base WHERE doc_id = '{doc_id}' AND password = '{password}'"
-        cursor.execute(statement)
+        statement = "SELECT * FROM doctor_base WHERE doc_id = %s AND password = %s"
+        cursor.execute(statement, (doc_id, password))
         for result in cursor:
             doctor_info = result
         return {
@@ -621,8 +576,9 @@ def get_doctor_clinic_list(doc_id):
     clinics = []
     try:
         connection.autocommit = True
-        statement = f"SELECT * FROM clinic_base WHERE doc_id = '{doc_id}' AND date >= '{(datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')}' AND date <= '{(datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d')}'"
-        cursor.execute(statement)
+        statement = "SELECT * FROM clinic_base WHERE doc_id = %s AND date >= %s AND date <= %s"
+        cursor.execute(statement, (doc_id, (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d'),
+                                   (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d')))
         for result in cursor:
             clinics.append({
                 'clinic_id': result[0],
@@ -655,8 +611,8 @@ def get_patients_by_clinic_id(clinic_id):
     patients = []
     try:
         connection.autocommit = True
-        statement = f"SELECT patient_id, patient_name, appointment_num FROM appointment_base WHERE clinic_id = '{clinic_id}' ORDER BY appointment_num ASC"
-        cursor.execute(statement)
+        statement = "SELECT patient_id, patient_name, appointment_num FROM appointment_base WHERE clinic_id = %s ORDER BY appointment_num ASC"
+        cursor.execute(statement, (clinic_id,))
         for result in cursor:
             patients.append({
                 'patient_id': result[0],
@@ -679,8 +635,9 @@ def update_appointment_start_time_to_now(clinic_id, appointment_num):
     :param str appointment_num: Registered appointment number
     """
     try:
-        statement = f"UPDATE appointment_base SET start_time = '{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}' WHERE clinic_id = '{clinic_id}' AND appointment_num = '{appointment_num}'"
-        cursor.execute(statement)
+        statement = "UPDATE appointment_base SET start_time = %s WHERE clinic_id = %s AND appointment_num = %s"
+        values = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), clinic_id, appointment_num)
+        cursor.execute(statement, values)
         connection.commit()
     except (TypeError, UnboundLocalError):
         print("Error updating entry from database, no matching results")
@@ -695,8 +652,9 @@ def update_appointment_end_time_to_now(clinic_id, appointment_num):
     :param str appointment_num: Registered appointment number
     """
     try:
-        statement = f"UPDATE appointment_base SET end_time = '{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}' WHERE clinic_id = '{clinic_id}' AND appointment_num = '{appointment_num}'"
-        cursor.execute(statement)
+        statement = "UPDATE appointment_base SET end_time = %s WHERE clinic_id = %s AND appointment_num = %s"
+        values = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), clinic_id, appointment_num)
+        cursor.execute(statement, values)
         connection.commit()
     except (TypeError, UnboundLocalError):
         print("Error updating entry from database, no matching results")
@@ -711,8 +669,9 @@ def clear_appointment_start_time_end_time(clinic_id, appointment_num):
     :param str appointment_num: Registered appointment number
     """
     try:
-        statement = f"UPDATE appointment_base SET start_time = NULL, end_time = NULL WHERE clinic_id = '{clinic_id}' AND appointment_num = '{appointment_num}'"
-        cursor.execute(statement)
+        statement = "UPDATE appointment_base SET start_time = NULL, end_time = NULL WHERE clinic_id = %s AND appointment_num = %s"
+        values = (clinic_id, appointment_num)
+        cursor.execute(statement, values)
         connection.commit()
     except (TypeError, UnboundLocalError):
         print("Error updating entry from database, no matching results")
